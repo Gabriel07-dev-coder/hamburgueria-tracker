@@ -18,7 +18,7 @@ export function iniciarRastreamento(id) {
                 console.error("Erro ao gravar no banco:", err);
             });
         }, (error) => {
-            alert("Erro no GPS: " + error.message);
+            alert("ERRO CRÍTICO DE GPS: " + error.message + " (Código: " + error.code + ")");
         }, { enableHighAccuracy: true });
     } else {
         alert("Seu celular não suporta GPS no navegador.");
