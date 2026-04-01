@@ -3,86 +3,80 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Painel Logística - Hamburgueria</title>
+    <title>Painel Hamburgueria</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <style>
-        #map {
-            height: 100vh;
-            width: 100%;
-        }
-        body { margin: 0; font-family: Arial, sans-serif; }
+        /* Garante que o mapa ocupe a tela toda sem sumir */
+        body, html { margin: 0; padding: 0; height: 100%; overflow: hidden; }
+        #map { height: 100vh; width: 100vw; position: absolute; top: 0; left: 0; z-index: 1; }
         
-        /* Legenda flutuante */
+        /* Painel flutuante por cima do mapa */
         .info-panel {
             position: absolute;
-            top: 10px;
-            right: 10px;
+            top: 20px;
+            right: 20px;
             background: white;
-            padding: 10px;
+            padding: 15px;
             z-index: 1000;
-            border-radius: 8px;
-            box-shadow: 0 0 15px rgba(0,0,0,0.2);
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+            font-family: sans-serif;
+            min-width: 150px;
         }
     </style>
 </head>
 <body>
+
     <div class="info-panel">
-        <h3 style="margin:0 0 5px 0">Entregas Ativas</h3>
+        <h3 style="margin:0 0 5px 0; color: #e67e22;">🍔 Entregas Ativas</h3>
         <div id="status-ana">Aguardando sinal...</div>
+        <p style="font-size: 11px; color: #666; margin-top: 10px;">💡 Clique no mapa para marcar uma entrega</p>
     </div>
-    
+
     <div id="map"></div>
 
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script type="module">
         import { monitorarEntregador } from './app.js';
 
-        // 1. Configuração de Ícones
+        // Ícones personalizados
         const motoIcon = L.icon({
             iconUrl: 'https://cdn-icons-png.flaticon.com/512/2972/2972185.png',
-            iconSize: [45, 45],
-            iconAnchor: [22, 45]
+            iconSize: [45, 45], iconAnchor: [22, 45]
         });
 
         const entregaIcon = L.icon({
-            iconUrl: 'https://cdn-icons-png.flaticon.com/512/1670/1670915.png',
-            iconSize: [35, 35],
-            iconAnchor: [17, 35]
+            iconUrl: 'https://cdn-icons-png.flaticon.com/512/581/581640.png',
+            iconSize: [35, 35], iconAnchor: [17, 35]
         });
 
-        // 2. Inicializa o mapa em Curitiba
-        const map = L.map('map').setView([-25.4431, -49.2761], 14);
+        // Inicia o mapa centralizado em Curitiba
+        const map = L.map('map', { zoomControl: false }).setView([-25.4431, -49.2761], 14);
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+        L.control.zoom({ position: 'bottomright' }).addTo(map);
 
-        // 3. Suas Entregas (Mude as coordenadas conforme os pedidos saírem)
-        const listaEntregas = [
-            { id: 1, cliente: "Pedido #101 - Rua Itajubá", lat: -25.4510, lng: -49.2680 },
-            { id: 2, cliente: "Pedido #102 - Av. das Torres", lat: -25.4600, lng: -49.2550 }
-        ];
-
-        // Desenha as entregas no mapa
-        listaEntregas.forEach(p => {
-            L.marker([p.lat, p.lng], { icon: entregaIcon })
-                .addTo(map)
-                .bindPopup(<b>Destino:</b> ${p.cliente});
+        // Função: Clicar no mapa para marcar entrega
+        map.on('click', function(e) {
+            const { lat, lng } = e.latlng;
+            const nome = prompt("Nome do Cliente ou Pedido:");
+            if (nome) {
+                L.marker([lat, lng], { icon: entregaIcon }).addTo(map)
+                    .bindPopup(`<b>Entrega:</b> ${nome}`).openPopup();
+            }
         });
 
         let marker;
 
-        // 4. Monitora a ANA em tempo real
+        // Monitorar a Ana
         monitorarEntregador('8zlr1Gb8EDj6JdRXHfNR', (data) => {
             const { lat, lng, nome, status } = data;
-            
-            document.getElementById('status-ana').innerHTML = <b>${nome}:</b> ${status};
+            document.getElementById('status-ana').innerHTML = `<b>${nome}:</b> <span style="color: green;">${status}</span>`;
 
             if (!marker) {
                 marker = L.marker([lat, lng], { icon: motoIcon }).addTo(map).bindPopup(nome).openPopup();
             } else {
                 marker.setLatLng([lat, lng]);
             }
-            
-            // Centraliza na Ana apenas se ela se mover muito (opcional)
-            // map.panTo([lat, lng]); 
         });
     </script>
 </body>
