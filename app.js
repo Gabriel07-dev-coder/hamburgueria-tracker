@@ -4,7 +4,6 @@ import { doc, updateDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/1
 // 1. Função para o celular da ANA (entregador.html)
 export function iniciarRastreamento(id) {
     if ("geolocation" in navigator) {
-        // Alerta para confirmar que o código começou a rodar no celular
         alert("GPS Iniciado! Tentando capturar posição..."); 
 
         navigator.geolocation.watchPosition((position) => {
