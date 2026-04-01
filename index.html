@@ -1,83 +1,24 @@
-<!DOCTYPE html>
-<html lang="pt-br">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Painel Hamburgueria</title>
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-    <style>
-        /* Garante que o mapa ocupe a tela toda sem sumir */
-        body, html { margin: 0; padding: 0; height: 100%; overflow: hidden; }
-        #map { height: 100vh; width: 100vw; position: absolute; top: 0; left: 0; z-index: 1; }
-        
-        /* Painel flutuante por cima do mapa */
-        .info-panel {
-            position: absolute;
-            top: 20px;
-            right: 20px;
-            background: white;
-            padding: 15px;
-            z-index: 1000;
-            border-radius: 12px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
-            font-family: sans-serif;
-            min-width: 150px;
-        }
-    </style>
-</head>
-<body>
+// --- NOVO CÓDIGO DO ÍCONE DA MOTO ---
+const motoIcon = L.icon({
+    // Este é um link direto para um ícone de moto de entrega
+    iconUrl: 'https://cdn-icons-png.flaticon.com/512/2972/2972185.png', 
+    iconSize: [45, 45], // Tamanho do ícone no mapa
+    iconAnchor: [22, 45], // Ponto de ancoragem (garante que a moto fique sobre a rua)
+    popupAnchor: [0, -45] // Onde o balãozinho de texto aparece
+});
+// ------------------------------------
 
-    <div class="info-panel">
-        <h3 style="margin:0 0 5px 0; color: #e67e22;">🍔 Entregas Ativas</h3>
-        <div id="status-ana">Aguardando sinal...</div>
-        <p style="font-size: 11px; color: #666; margin-top: 10px;">💡 Clique no mapa para marcar uma entrega</p>
-    </div>
+// Agora, no seu código onde você cria o marcador da Ana:
+monitorarEntregador('8zlr1Gb8EDj6JdRXHfNR', (data) => {
+    const { lat, lng, nome } = data;
 
-    <div id="map"></div>
-
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-    <script type="module">
-        import { monitorarEntregador } from './app.js';
-
-        // Ícones personalizados
-        const motoIcon = L.icon({
-            iconUrl: 'https://cdn-icons-png.flaticon.com/512/2972/2972185.png',
-            iconSize: [45, 45], iconAnchor: [22, 45]
-        });
-
-        const entregaIcon = L.icon({
-            iconUrl: 'https://cdn-icons-png.flaticon.com/512/581/581640.png',
-            iconSize: [35, 35], iconAnchor: [17, 35]
-        });
-
-        // Inicia o mapa centralizado em Curitiba
-        const map = L.map('map', { zoomControl: false }).setView([-25.4431, -49.2761], 14);
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
-        L.control.zoom({ position: 'bottomright' }).addTo(map);
-
-        // Função: Clicar no mapa para marcar entrega
-        map.on('click', function(e) {
-            const { lat, lng } = e.latlng;
-            const nome = prompt("Nome do Cliente ou Pedido:");
-            if (nome) {
-                L.marker([lat, lng], { icon: entregaIcon }).addTo(map)
-                    .bindPopup(`<b>Entrega:</b> ${nome}`).openPopup();
-            }
-        });
-
-        let marker;
-
-        // Monitorar a Ana
-        monitorarEntregador('8zlr1Gb8EDj6JdRXHfNR', (data) => {
-            const { lat, lng, nome, status } = data;
-            document.getElementById('status-ana').innerHTML = `<b>${nome}:</b> <span style="color: green;">${status}</span>`;
-
-            if (!marker) {
-                marker = L.marker([lat, lng], { icon: motoIcon }).addTo(map).bindPopup(nome).openPopup();
-            } else {
-                marker.setLatLng([lat, lng]);
-            }
-        });
-    </script>
-</body>
-</html>
+    if (!marker) {
+        // MUDANÇA AQUI: Trocamos o ícone antigo por 'motoIcon'
+        marker = L.marker([lat, lng], { icon: motoIcon })
+            .addTo(map)
+            .bindPopup(nome)
+            .openPopup();
+    } else {
+        marker.setLatLng([lat, lng]);
+    }
+});
