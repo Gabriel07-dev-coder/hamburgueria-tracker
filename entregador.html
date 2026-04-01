@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Painel do Entregador</title>
+</head>
+<body>
+
+    <div style="text-align: center; padding: 20px; font-family: sans-serif;">
+        <h1>Rastreamento Ativo</h1>
+        <p>Olá, Ana! Sua posição está sendo enviada para a hamburgueria.</p>
+        <div id="status-gps" style="color: green;">🛰️ GPS Conectado</div>
+    </div>
+
+    <script type="module">
+        import { iniciarRastreamento } from './app.js';
+        
+        // Inicia o envio das coordenadas reais para o documento da ANA no Firebase
+        iniciarRastreamento('8zlr1Gb8EDj6JdRXHfNR');
+    </script>
+
+</body>
+</html>
