@@ -9,14 +9,14 @@ export function iniciarRastreamento(id) {
         navigator.geolocation.watchPosition((position) => {
             const docRef = doc(db, "entregadores", id);
             
-            // setDoc com merge garante que o documento seja criado se não existir
+            // setDoc cria o documento se ele não existir (merge: true mantém outros dados)
             setDoc(docRef, {
                 lat: position.coords.latitude,
                 lng: position.coords.longitude,
                 status: "online",
-                nome: "ANA" // Garante que o nome esteja lá
+                nome: "ANA"
             }, { merge: true }).then(() => {
-                console.log("Posição enviada com sucesso!");
+                console.log("Posição gravada com sucesso!");
             }).catch(err => {
                 console.error("Erro ao gravar no banco:", err);
             });
