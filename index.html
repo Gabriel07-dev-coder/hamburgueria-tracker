@@ -1,46 +1,89 @@
-import { monitorarEntregador } from './app.js';
-
-// 1. Configuração de Ícones (Diferentes para não confundir)
-const motoIcon = L.icon({
-    iconUrl: 'https://cdn-icons-png.flaticon.com/512/2972/2972185.png',
-    iconSize: [45, 45],
-    iconAnchor: [22, 45]
-});
-
-const entregaIcon = L.icon({
-    iconUrl: 'https://cdn-icons-png.flaticon.com/512/581/581640.png', 
-    iconSize: [35, 35],
-    iconAnchor: [17, 35]
-});
-
-// 2. Inicializa o mapa
-const map = L.map('map').setView([-25.4431, -49.2761], 14);
-L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
-
-// 3. Função para adicionar entrega clicando no mapa
-map.on('click', function(e) {
-    const { lat, lng } = e.latlng;
-    const nomeCliente = prompt("Nome do Cliente ou Número do Pedido:");
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Painel Logística - Hamburgueria</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <style>
+        #map {
+            height: 100vh;
+            width: 100%;
+        }
+        body { margin: 0; font-family: Arial, sans-serif; }
+        
+        /* Legenda flutuante */
+        .info-panel {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: white;
+            padding: 10px;
+            z-index: 1000;
+            border-radius: 8px;
+            box-shadow: 0 0 15px rgba(0,0,0,0.2);
+        }
+    </style>
+</head>
+<body>
+    <div class="info-panel">
+        <h3 style="margin:0 0 5px 0">Entregas Ativas</h3>
+        <div id="status-ana">Aguardando sinal...</div>
+    </div>
     
-    if (nomeCliente) {
-        L.marker([lat, lng], { icon: entregaIcon })
-            .addTo(map)
-            .bindPopup(`<b>Entrega:</b> ${nomeCliente}`)
-            .openPopup();
+    <div id="map"></div>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script type="module">
+        import { monitorarEntregador } from './app.js';
+
+        // 1. Configuração de Ícones
+        const motoIcon = L.icon({
+            iconUrl: 'https://cdn-icons-png.flaticon.com/512/2972/2972185.png',
+            iconSize: [45, 45],
+            iconAnchor: [22, 45]
+        });
+
+        const entregaIcon = L.icon({
+            iconUrl: 'https://cdn-icons-png.flaticon.com/512/1670/1670915.png',
+            iconSize: [35, 35],
+            iconAnchor: [17, 35]
+        });
+
+        // 2. Inicializa o mapa em Curitiba
+        const map = L.map('map').setView([-25.4431, -49.2761], 14);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+
+        // 3. Suas Entregas (Mude as coordenadas conforme os pedidos saírem)
+        const listaEntregas = [
+            { id: 1, cliente: "Pedido #101 - Rua Itajubá", lat: -25.4510, lng: -49.2680 },
+            { id: 2, cliente: "Pedido #102 - Av. das Torres", lat: -25.4600, lng: -49.2550 }
+        ];
+
+        // Desenha as entregas no mapa
+        listaEntregas.forEach(p => {
+            L.marker([p.lat, p.lng], { icon: entregaIcon })
+                .addTo(map)
+                .bindPopup(<b>Destino:</b> ${p.cliente});
+        });
+
+        let marker;
+
+        // 4. Monitora a ANA em tempo real
+        monitorarEntregador('8zlr1Gb8EDj6JdRXHfNR', (data) => {
+            const { lat, lng, nome, status } = data;
             
-        console.log(`Nova entrega marcada em: ${lat}, ${lng}`);
-    }
-});
+            document.getElementById('status-ana').innerHTML = <b>${nome}:</b> ${status};
 
-let marker;
-
-// 4. Monitora a ANA (ID fixo que você já está usando)
-monitorarEntregador('8zlr1Gb8EDj6JdRXHfNR', (data) => {
-    const { lat, lng, nome } = data;
-
-    if (!marker) {
-        marker = L.marker([lat, lng], { icon: motoIcon }).addTo(map).bindPopup(nome).openPopup();
-    } else {
-        marker.setLatLng([lat, lng]);
-    }
-});
+            if (!marker) {
+                marker = L.marker([lat, lng], { icon: motoIcon }).addTo(map).bindPopup(nome).openPopup();
+            } else {
+                marker.setLatLng([lat, lng]);
+            }
+            
+            // Centraliza na Ana apenas se ela se mover muito (opcional)
+            // map.panTo([lat, lng]); 
+        });
+    </script>
+</body>
+</html>
