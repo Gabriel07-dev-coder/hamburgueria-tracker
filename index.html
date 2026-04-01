@@ -1,61 +1,85 @@
 <!DOCTYPE html>
+
 <html lang="pt-br">
+
 <head>
+
     <meta charset="UTF-8">
+
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Painel Logística - Hamburgueria</title>
+
+    <title>Painel Hamburgueria</title>
+
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+
     <style>
-        #map { height: 100vh; width: 100%; }
-        body { margin: 0; font-family: Arial, sans-serif; }
-        .painel-de-informacoes {
-            position: absolute; top: 10px; right: 10px;
-            background: white; padding: 10px; z-index: 1000;
-            border-radius: 8px; box-shadow: 0 0 15px rgba(0,0,0,0.2);
-        }
+
+       #map {
+
+    height: 100vh;
+
+    width: 100%;
+
+}
+
+        body { margin: 0; }
+
     </style>
+
 </head>
+
 <body>
-    <div class="painel-de-informacoes">
-        <h3 style="margin:0 0 5px 0">Entregas Ativas</h3>
-        <div id="status-ana">Aguardando sinal...</div>
-    </div>
-    
+
     <div id="map"></div>
+
+
 
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
     <script type="module">
+
         import { monitorarEntregador } from './app.js';
 
-        // Configuração do Ícone da Moto
-        const motoIcon = L.icon({
-            iconUrl: 'https://cdn-icons-png.flaticon.com/512/2972/2972185.png',
-            iconSize: [45, 45],
-            iconAnchor: [22, 45],
-            popupAnchor: [0, -45]
-        });
+
 
         // Inicializa o mapa em Curitiba
-        const map = L.map('map').setView([-25.4431, -49.2761], 14);
+
+        const map = L.map('map').setView([-25.4431, -49.2761], 15);
+
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+
+
 
         let marker;
 
-        // Monitora a ANA (ID do seu banco de dados)
+
+
+        // Monitora o ID da ANA
+
         monitorarEntregador('8zlr1Gb8EDj6JdRXHfNR', (data) => {
-            const { lat, lng, nome, status } = data;
-            
-            document.getElementById('status-ana').innerHTML = 
-                `<b>${nome}:</b> <span style="color: green;">${status}</span>`;
+
+            const { lat, lng, nome } = data;
+
+            console.log("Posição atualizada:", lat, lng);
+
+
 
             if (!marker) {
-                // Aqui a moto é criada no mapa
-                marker = L.marker([lat, lng], { icon: motoIcon }).addTo(map).bindPopup(nome).openPopup();
+
+                marker = L.marker([lat, lng]).addTo(map).bindPopup(nome).openPopup();
+
             } else {
+
                 marker.setLatLng([lat, lng]);
+
             }
+
+            map.panTo([lat, lng]);
+
         });
+
     </script>
+
 </body>
+
 </html>
