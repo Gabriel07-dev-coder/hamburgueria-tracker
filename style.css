@@ -1,52 +1,50 @@
-<style>
-    body { margin: 0; overflow: hidden; font-family: 'Poppins', sans-serif; }
+body { margin: 0; overflow: hidden; font-family: sans-serif; background: #121212; }
 
-    /* Estilo de Vidro Escuro */
-    .glass-sidebar {
-        background: rgba(0, 0, 0, 0.75);
-        backdrop-filter: blur(15px);
-        -webkit-backdrop-filter: blur(15px);
-        border-radius: 20px;
-        padding: 15px;
-        border: 1px solid rgba(255, 255, 255, 0.1);
-        position: absolute;
-        z-index: 1000;
-        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
-    }
+#map { 
+    height: 100vh; 
+    width: 100vw; 
+    position: fixed; 
+    top: 0; 
+    left: 0; 
+    z-index: 1; /* Fica no fundo */
+}
 
-    .panel-header h3 { text-align: center; margin-top: 0; }
+.glass-sidebar {
+    background: rgba(0, 0, 0, 0.75);
+    backdrop-filter: blur(15px);
+    border-radius: 20px;
+    padding: 15px;
+    position: absolute;
+    z-index: 1000; /* Fica na frente do mapa */
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
 
-    /* Estilo para Itens em Andamento */
-    .delivery-item-box { display: flex; gap: 8px; }
-    .route-btn {
-        flex: 1;
-        background: rgba(13, 17, 23, 0.9);
-        color: white;
-        border: none;
-        padding: 12px;
-        border-radius: 15px;
-        cursor: pointer;
-        text-align: left;
-    }
-    .street-name { display: block; font-size: 13px; font-weight: 600; }
-    .eta-info { display: block; font-size: 11px; opacity: 0.6; }
-    
-    .finish-btn {
-        background: #28a745;
-        color: white;
-        border: none;
-        width: 45px;
-        border-radius: 12px;
-        cursor: pointer;
-        font-weight: bold;
-    }
+.delivery-item-box { display: flex; gap: 8px; margin-bottom: 10px; }
 
-    /* Estilo para Cartões Finalizados */
-    .card-historico {
-        background: rgba(255, 255, 255, 0.05);
-        padding: 12px;
-        border-radius: 12px;
-        min-width: 150px;
-        border-left: 4px solid #00ced1;
-    }
-</style>
+.route-btn {
+    flex: 1;
+    background: #008ba3;
+    color: white;
+    border: none;
+    padding: 12px;
+    border-radius: 15px;
+    cursor: pointer;
+    text-align: left;
+}
+
+.finish-btn {
+    background: #28a745;
+    color: white;
+    border: none;
+    width: 45px;
+    border-radius: 12px;
+    cursor: pointer;
+}
+
+.card-historico {
+    background: rgba(255, 255, 255, 0.05);
+    padding: 12px;
+    border-radius: 12px;
+    min-width: 150px;
+    border-left: 4px solid #00ced1;
+}
