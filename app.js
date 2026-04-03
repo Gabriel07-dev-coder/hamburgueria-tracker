@@ -1,17 +1,18 @@
 // Ponto de partida: Scooby Dog
 const baseCoords = L.latLng(-25.4431, -49.2761);
 
-// Inicializa o mapa focado em Curitiba
+// Inicializa o mapa
 const map = L.map('map').setView([-25.4431, -49.2761], 13);
 
 L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
     attribution: '© OpenStreetMap'
 }).addTo(map);
 
-// Função unificada para finalizar e calcular KM
-window.finalizarComKM = function(idDiv, idInput, coordsDestino) {
-    const nomeRua = document.getElementById(idInput).value; // Pega o texto editado
+// ESTA É A FUNÇÃO QUE ESTAVA FALTANDO
+window.finalizarEntregaEditada = function(idDiv, idInput, coordsDestino) {
+    const nomeRua = document.getElementById(idInput).value; // Pega o que você digitou
     const item = document.getElementById(idDiv);
+    
     if (item) item.remove();
 
     const destino = L.latLng(coordsDestino[0], coordsDestino[1]);
