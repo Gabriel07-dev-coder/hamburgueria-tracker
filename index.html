@@ -9,24 +9,52 @@
     <link rel="stylesheet" href="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.css" />
     
     <style>
-        body, html { margin: 0; padding: 0; height: 100vh; width: 100vw; overflow: hidden; font-family: sans-serif; background-color: #0d1117; }
-        #map { height: 100vh; width: 100vw; position: absolute; top: 0; left: 0; z-index: 1; }
-        .glass-sidebar {
-            position: absolute; top: 20px; left: 20px; width: 280px;
-            background: rgba(255, 255, 255, 0.05); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
-            border-radius: 16px; border: 1px solid rgba(255, 255, 255, 0.1);
-            z-index: 1000; padding: 20px; color: white;
+        body, html { margin: 0; padding: 0; height: 100vh; width: 100vw; overflow: hidden; font-family: 'Poppins', sans-serif; background-color: #0d1117; color: white; }
+        #map { height: 100vh; width: 100vw; position: absolute; z-index: 1; }
+
+        /* Painel Lateral (Entregas Pendentes) */
+        .sidebar-right {
+            position: absolute; top: 20px; right: 20px; width: 280px;
+            background: rgba(255, 255, 255, 0.05); backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px);
+            border-radius: 20px; border: 1px solid rgba(255, 255, 255, 0.1);
+            z-index: 1000; padding: 20px; box-shadow: 0 8px 32px rgba(0,0,0,0.5);
         }
-        /* Estilo Dark para a busca */
-        .leaflet-control-geocoder { background: #161b22 !important; border: 1px solid #30363d !important; }
+
+        .delivery-item {
+            background: #008ba3; color: white; padding: 12px; margin: 10px 0;
+            border-radius: 12px; text-align: center; font-size: 14px; font-weight: 500;
+            cursor: pointer; transition: 0.3s; border: none; width: 100%;
+        }
+
+        .delivery-item:hover { background: #00a8c5; transform: scale(1.02); }
+
+        /* Painel Inferior (Contador) */
+        .counter-panel {
+            position: absolute; bottom: 30px; left: 20px; width: 200px;
+            background: rgba(255, 255, 255, 0.05); backdrop-filter: blur(15px);
+            border-radius: 20px; border: 1px solid rgba(255, 255, 255, 0.1);
+            z-index: 1000; padding: 15px; text-align: center;
+        }
+
+        .count-number { font-size: 32px; font-weight: bold; color: #00ced1; margin-top: 5px; }
+
+        /* Estilo da Busca */
+        .leaflet-control-geocoder { background: #161b22 !important; border: 1px solid #30363d !important; border-radius: 10px !important; }
         .leaflet-control-geocoder-form input { color: white !important; }
     </style>
 </head>
 <body>
 
-    <div class="glass-sidebar">
-        <strong>Central de Comando</strong>
-        <div id="status-ana" style="color: #58a6ff; margin-top: 10px;">Iniciando sistema...</div>
+    <div class="sidebar-right">
+        <div style="text-align: center; margin-bottom: 15px; font-weight: bold; letter-spacing: 1px;">ENTREGAS ATIVAS</div>
+        <button class="delivery-item" onclick="focarEntrega(-25.4614, -49.2275)">Rua João Guerino Fabri</button>
+        <button class="delivery-item" onclick="focarEntrega(-25.4411, -49.2120)">Rua Bela Vista</button>
+        <button class="delivery-item" onclick="focarEntrega(-25.4520, -49.2310)">Rua Luiz</button>
+    </div>
+
+    <div class="counter-panel">
+        <div style="font-size: 12px; opacity: 0.8;">ENTREGAS CONCLUÍDAS</div>
+        <div class="count-number">10</div>
     </div>
     
     <div id="map"></div>
@@ -37,48 +65,36 @@
     <script type="module">
         import { monitorarEntregador } from './app.js';
 
-        // Função para garantir que o Leaflet (L) existe antes de usar
-        function iniciarMapa() {
-            if (typeof L === 'undefined') {
-                setTimeout(iniciarMapa, 100); // Tenta de novo em 100ms se não carregou
-                return;
+        const map = L.map('map', { zoomControl: false }).setView([-25.4431, -49.2761], 14);
+        
+        // Mapa Dark que você já está usando
+        L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png').addTo(map);
+
+        // Função para focar o mapa quando clicar no botão da rua
+        window.focarEntrega = (lat, lng) => {
+            map.flyTo([lat, lng], 16);
+            L.marker([lat, lng]).addTo(map).bindPopup("Destino da Entrega").openPopup();
+        };
+
+        const motoIcon = L.icon({
+            iconUrl: 'https://cdn-icons-png.flaticon.com/512/2972/2972185.png',
+            iconSize: [45, 45],
+            iconAnchor: [22, 45]
+        });
+
+        let marker;
+
+        monitorarEntregador('8zlr1Gb8EDj6JdRXHfNR', (data) => {
+            const { lat, lng, nome } = data;
+            if (!marker) {
+                marker = L.marker([lat, lng], { icon: motoIcon }).addTo(map).bindTooltip(nome, { permanent: true, direction: 'top' });
+            } else {
+                marker.setLatLng([lat, lng]);
             }
+        });
 
-            const map = L.map('map', { zoomControl: false }).setView([-25.4431, -49.2761], 14);
-            L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png').addTo(map);
-
-            // Adiciona a busca (Geocodificador)
-            const searchControl = L.Control.geocoder({
-                defaultMarkGeocode: false,
-                placeholder: "Buscar endereço de entrega...",
-            }).on('markgeocode', function(e) {
-                const latlng = e.geocode.center;
-                L.marker(latlng).addTo(map).bindPopup(e.geocode.name).openPopup();
-                map.setView(latlng, 16);
-            }).addTo(map);
-
-            const motoIcon = L.icon({
-                iconUrl: 'https://cdn-icons-png.flaticon.com/512/2972/2972185.png',
-                iconSize: [45, 45],
-                iconAnchor: [22, 45]
-            });
-
-            let marker;
-
-            // Conecta ao seu Firebase
-            monitorarEntregador('8zlr1Gb8EDj6JdRXHfNR', (data) => {
-                const { lat, lng, nome } = data;
-                document.getElementById('status-ana').innerHTML = nome + " (GPS Conectado)";
-
-                if (!marker) {
-                    marker = L.marker([lat, lng], { icon: motoIcon }).addTo(map);
-                } else {
-                    marker.setLatLng([lat, lng]);
-                }
-            });
-        }
-
-        iniciarMapa();
+        // Adiciona a barra de busca
+        L.Control.geocoder({ placeholder: "Novo pedido..." }).addTo(map);
     </script>
 </body>
 </html>
