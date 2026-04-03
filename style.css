@@ -1,50 +1,9 @@
-body { margin: 0; overflow: hidden; font-family: sans-serif; background: #121212; }
-
-#map { 
-    height: 100vh; 
-    width: 100vw; 
-    position: fixed; 
-    top: 0; 
-    left: 0; 
-    z-index: 1; /* Fica no fundo */
+body {
+    margin: 0;
+    padding: 0;
+    background-color: #000; /* Fundo preto enquanto o mapa carrega */
 }
 
-.glass-sidebar {
-    background: rgba(0, 0, 0, 0.75);
-    backdrop-filter: blur(15px);
-    border-radius: 20px;
-    padding: 15px;
-    position: absolute;
-    z-index: 1000; /* Fica na frente do mapa */
-    border: 1px solid rgba(255, 255, 255, 0.1);
-}
-
-.delivery-item-box { display: flex; gap: 8px; margin-bottom: 10px; }
-
-.route-btn {
-    flex: 1;
-    background: #008ba3;
-    color: white;
-    border: none;
-    padding: 12px;
-    border-radius: 15px;
-    cursor: pointer;
-    text-align: left;
-}
-
-.finish-btn {
-    background: #28a745;
-    color: white;
-    border: none;
-    width: 45px;
-    border-radius: 12px;
-    cursor: pointer;
-}
-
-.card-historico {
-    background: rgba(255, 255, 255, 0.05);
-    padding: 12px;
-    border-radius: 12px;
-    min-width: 150px;
-    border-left: 4px solid #00ced1;
+#map {
+    background: transparent;
 }
