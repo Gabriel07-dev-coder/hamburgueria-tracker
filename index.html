@@ -1,24 +1,22 @@
 <div id="map" style="height: 100vh; width: 100vw; position: fixed; top: 0; left: 0; z-index: 1;"></div>
 
-<div class="glass-sidebar" id="sidebar-andamento" style="right: 20px; top: 20px; width: 300px; max-height: 80vh;">
-    <h3 class="panel-header" style="color: #fff; opacity: 0.9;">Entregas em andamento</h3>
-    <div id="lista-ativas" style="display: flex; flex-direction: column; gap: 10px;">
-        
-        <div class="delivery-item-box" id="entrega-joao">
-            <button class="route-btn" onclick="focarRota(-25.4614, -49.2275, 'Rua João Guerino Fabri')">
-                <span class="street-name">Rua João Guerino Fabri</span>
-                <span class="eta-info">Eta: calculando...</span>
+<div class="glass-sidebar" id="sidebar-andamento" style="position: absolute; right: 20px; top: 20px; width: 300px; z-index: 1000; background: rgba(0,0,0,0.7); backdrop-filter: blur(10px); border-radius: 20px; padding: 15px; color: white;">
+    <h3 style="color: #00ced1; text-align: center; font-size: 16px;">Entregas em andamento</h3>
+    <div id="lista-ativas">
+        <div class="delivery-item-box" id="entrega-joao" style="display: flex; gap: 5px; margin-bottom: 10px;">
+            <button onclick="focarRota(-25.4614, -49.2275, 'Rua João Guerino Fabri')" style="flex: 1; background: #008ba3; border: none; color: white; padding: 10px; border-radius: 12px; cursor: pointer; text-align: left;">
+                <span style="display: block; font-size: 13px;">Rua João Guerino Fabri</span>
+                <span style="font-size: 10px; opacity: 0.6;">Eta: calculando...</span>
             </button>
-            <button class="finish-btn" onclick="finalizarComKM('entrega-joao', 'Rua João Guerino Fabri', [-25.4614, -49.2275])">✓</button>
+            <button onclick="finalizarComKM('entrega-joao', 'Rua João Guerino Fabri', [-25.4614, -49.2275])" style="background: #28a745; border: none; color: white; padding: 10px; border-radius: 10px; cursor: pointer;">✓</button>
         </div>
-        
     </div>
 </div>
 
-<div class="glass-sidebar" id="sidebar-finalizadas" style="left: 20px; bottom: 20px; width: auto; min-width: 400px;">
-    <div class="panel-header" style="background: black; padding: 5px 15px; border-radius: 20px; display: inline-block;">
+<div class="glass-sidebar" id="sidebar-finalizadas" style="position: absolute; left: 20px; bottom: 20px; min-width: 400px; z-index: 1000; background: rgba(0,0,0,0.7); backdrop-filter: blur(10px); border-radius: 20px; padding: 15px; color: white;">
+    <div style="background: black; padding: 5px 15px; border-radius: 20px; display: inline-block; margin-bottom: 10px;">
         <h3 style="color: white; font-size: 14px; margin: 0;">Entregas finalizada</h3>
     </div>
-    <div id="historico-entregas" style="display: flex; gap: 15px; margin-top: 15px;">
+    <div id="historico-entregas" style="display: flex; gap: 15px;">
         </div>
 </div>
