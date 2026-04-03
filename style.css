@@ -1,33 +1,101 @@
-.search-style-container {
+/* Layout base */
+body { margin: 0; padding: 0; overflow: hidden; font-family: sans-serif; background: #fff; }
+
+#map { 
+    height: 100vh; 
+    width: 100vw; 
+    position: fixed; 
+    top: 0; 
+    left: 0; 
+    z-index: 0; /* Mapa sempre no fundo */
+}
+
+/* Painel de Vidro (melhorado) */
+.glass-sidebar {
+    background: rgba(255, 255, 255, 0.9);
+    backdrop-filter: blur(10px);
+    border-radius: 12px;
+    padding: 15px;
+    position: absolute;
+    z-index: 10;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    border: 1px solid rgba(0,0,0,0.05);
+}
+
+/* BARRA SUPERIOR */
+.top-bar {
+    top: 20px;
+    left: 20px;
+    right: 20px;
     display: flex;
+    gap: 10px;
     align-items: center;
-    background: white;
-    border-radius: 24px;
-    padding: 8px 16px;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+}
+
+.top-bar input {
     flex: 1;
-    margin-right: 10px;
-}
-
-.maps-input {
-    border: none;
-    outline: none;
-    width: 100%;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
     font-size: 14px;
-    color: #3c4043;
-    margin-left: 10px;
 }
 
-.search-icon {
-    color: #70757a;
+.top-bar button {
+    background: #007bff;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 8px;
+    cursor: pointer;
+}
+
+/* PAINEL LATERAL ESQUERDO */
+.left-panel {
+    top: 80px;
+    left: 20px;
+    width: 280px;
+    max-height: calc(100vh - 120px);
+    display: flex;
+    flex-direction: column;
+}
+
+.left-panel .panel-header {
+    text-align: left;
+    margin: 0 0 15px;
+    color: #333;
     font-size: 18px;
 }
 
-.eta-label {
-    font-size: 11px;
-    color: #70757a;
-    white-space: nowrap;
-    margin-left: 10px;
-    border-left: 1px solid #dadce0;
-    padding-left: 10px;
+.status-buttons { display: flex; gap: 5px; margin-bottom: 15px; }
+.status-btn {
+    flex: 1;
+    background: #f0f0f0;
+    border: 1px solid #ddd;
+    padding: 8px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 13px;
 }
+.status-btn.active { background: #00ced1; color: white; border-color: #00ced1; }
+
+.pedidos-container { overflow-y: auto; display: flex; flex-direction: column; gap: 8px; }
+
+/* Itens de Pedido Estilizados */
+.pedido-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: #f9f9f9;
+    padding: 10px;
+    border-radius: 8px;
+    border: 1px solid #eee;
+}
+
+.dot { width: 12px; height: 12px; border-radius: 50%; } /* Cor do status */
+.dot.green { background: #28a745; }
+.dot.blue { background: #007bff; }
+.dot.red { background: #dc3545; }
+
+.pedido-id { font-weight: bold; color: #333; }
+.pedido-rua { flex: 1; color: #666; font-size: 12px; }
+.taxa { color: #888; font-size: 11px; }
