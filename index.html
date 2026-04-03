@@ -1,25 +1,23 @@
 <!DOCTYPE html>
 <html lang="pt-br">
-
-<body>
-
-    <div id="map"></div>
-
-    <div class="glass-sidebar" id="sidebar-andamento" style="right: 20px; top: 20px; width: 300px;">
-        <h3 style="color: #00ced1; text-align: center;">Entregas em andamento</h3>
-        <div id="lista-ativas">
-       <head>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Central de Entregas - Hamburgueria</title>
+    
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <link rel="stylesheet" href="style.css">
-    
+
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 </head>
 <body>
+
     <div id="map" style="height: 100vh; width: 100vw; position: fixed; top: 0; left: 0; z-index: 0;"></div>
 
-    ...
-    <script src="app.js"></script>
-</body>     <div class="delivery-item-box" id="item-1">
+    <div class="glass-sidebar" id="sidebar-andamento" style="right: 20px; top: 20px; width: 300px; z-index: 1000; position: absolute;">
+        <h3 style="color: #00ced1; text-align: center;">Entregas em andamento</h3>
+        <div id="lista-ativas">
+            <div class="delivery-item-box" id="item-1">
                 <button class="route-btn" onclick="focarRota(-25.4614, -49.2275, 'Rua João Guerino Fabri')">
                     <span class="street-name">Rua João Guerino Fabri</span>
                     <span class="eta-info">Eta: calculando...</span>
@@ -29,38 +27,13 @@
         </div>
     </div>
 
-    <div class="glass-sidebar" id="sidebar-finalizadas" style="left: 20px; bottom: 20px; min-width: 400px;">
+    <div class="glass-sidebar" id="sidebar-finalizadas" style="left: 20px; bottom: 20px; min-width: 400px; z-index: 1000; position: absolute;">
         <div style="background: black; padding: 5px 15px; border-radius: 20px; display: inline-block;">
             <h3 style="color: white; font-size: 14px; margin: 0;">Entregas finalizada</h3>
         </div>
         <div id="historico-entregas" style="display: flex; gap: 15px; margin-top: 15px;"></div>
     </div>
 
-    <script type="module" src="app.js"></script>
-    <script>
-        const baseCoords = L.latLng(-25.4431, -49.2761); // Scooby Dog
-
-        window.finalizarComKM = function(idDiv, nomeRua, coordsDestino) {
-            const item = document.getElementById(idDiv);
-            if (item) item.remove();
-
-            const destino = L.latLng(coordsDestino[0], coordsDestino[1]);
-            const distanciaKM = (baseCoords.distanceTo(destino) / 1000).toFixed(2);
-
-            const historico = document.getElementById('historico-entregas');
-            const card = document.createElement('div');
-            card.className = 'card-historico';
-            card.innerHTML = `
-                <div style="font-size: 13px; color: white;">✅ ${nomeRua}</div>
-                <div style="font-size: 11px; color: #00ced1;">Distância: ${distanciaKM} km</div>
-            `;
-            historico.prepend(card);
-        };
-
-        window.focarRota = function(lat, lng, nome) {
-            window.map.flyTo([lat, lng], 16);
-            L.marker([lat, lng]).addTo(window.map).bindPopup(nome).openPopup();
-        };
-    </script>
+    <script src="app.js"></script>
 </body>
 </html>
