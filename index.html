@@ -9,18 +9,16 @@
     <link rel="stylesheet" href="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.css" />
     
     <style>
-        body, html { margin: 0; padding: 0; height: 100vh; width: 100vw; overflow: hidden; font-family: Arial, sans-serif; background-color: #0d1117; }
+        body, html { margin: 0; padding: 0; height: 100vh; width: 100vw; overflow: hidden; font-family: sans-serif; background-color: #0d1117; }
         #map { height: 100vh; width: 100vw; position: absolute; top: 0; left: 0; z-index: 1; }
-        
         .glass-sidebar {
             position: absolute; top: 20px; left: 20px; width: 280px;
             background: rgba(255, 255, 255, 0.05); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
             border-radius: 16px; border: 1px solid rgba(255, 255, 255, 0.1);
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4); z-index: 1000; padding: 20px; color: white;
+            z-index: 1000; padding: 20px; color: white;
         }
-
-        /* Estilo Dark para a barra de pesquisa */
-        .leaflet-control-geocoder { background: #161b22 !important; border: 1px solid #30363d !important; border-radius: 8px !important; }
+        /* Estilo Dark para a busca */
+        .leaflet-control-geocoder { background: #161b22 !important; border: 1px solid #30363d !important; }
         .leaflet-control-geocoder-form input { color: white !important; }
     </style>
 </head>
@@ -28,7 +26,7 @@
 
     <div class="glass-sidebar">
         <strong>Central de Comando</strong>
-        <div id="status-ana" style="color: #58a6ff; margin-top: 10px;">Carregando...</div>
+        <div id="status-ana" style="color: #58a6ff; margin-top: 10px;">Iniciando sistema...</div>
     </div>
     
     <div id="map"></div>
@@ -39,23 +37,25 @@
     <script type="module">
         import { monitorarEntregador } from './app.js';
 
-        // Espera o Leaflet (L) estar disponível
-        window.onload = () => {
+        // Função para garantir que o Leaflet (L) existe antes de usar
+        function iniciarMapa() {
+            if (typeof L === 'undefined') {
+                setTimeout(iniciarMapa, 100); // Tenta de novo em 100ms se não carregou
+                return;
+            }
+
             const map = L.map('map', { zoomControl: false }).setView([-25.4431, -49.2761], 14);
-            
             L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png').addTo(map);
 
-            // Adiciona a busca
-            L.Control.geocoder({
+            // Adiciona a busca (Geocodificador)
+            const searchControl = L.Control.geocoder({
                 defaultMarkGeocode: false,
-                placeholder: "Buscar endereço...",
-            })
-            .on('markgeocode', function(e) {
-                var center = e.geocode.center;
-                L.marker(center).addTo(map).bindPopup(e.geocode.name).openPopup();
-                map.setView(center, 16);
-            })
-            .addTo(map);
+                placeholder: "Buscar endereço de entrega...",
+            }).on('markgeocode', function(e) {
+                const latlng = e.geocode.center;
+                L.marker(latlng).addTo(map).bindPopup(e.geocode.name).openPopup();
+                map.setView(latlng, 16);
+            }).addTo(map);
 
             const motoIcon = L.icon({
                 iconUrl: 'https://cdn-icons-png.flaticon.com/512/2972/2972185.png',
@@ -65,10 +65,10 @@
 
             let marker;
 
-            // Monitora a Ana
+            // Conecta ao seu Firebase
             monitorarEntregador('8zlr1Gb8EDj6JdRXHfNR', (data) => {
                 const { lat, lng, nome } = data;
-                document.getElementById('status-ana').innerHTML = nome + " em trânsito";
+                document.getElementById('status-ana').innerHTML = nome + " (GPS Conectado)";
 
                 if (!marker) {
                     marker = L.marker([lat, lng], { icon: motoIcon }).addTo(map);
@@ -76,7 +76,9 @@
                     marker.setLatLng([lat, lng]);
                 }
             });
-        };
+        }
+
+        iniciarMapa();
     </script>
 </body>
 </html>
