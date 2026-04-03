@@ -4,10 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Comando Logístico - Hamburgueria</title>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
     
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <link rel="stylesheet" href="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.css" />
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
     
     <style>
         body, html { margin: 0; padding: 0; height: 100vh; width: 100vw; overflow: hidden; font-family: 'Poppins', sans-serif; background-color: #0d1117; }
@@ -20,12 +20,11 @@
             box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4); z-index: 1000; padding: 20px; color: white;
         }
 
-        /* Estilo da barra de busca igual Google Maps Dark */
+        /* Estilo Dark para a barra de pesquisa */
         .leaflet-control-geocoder {
             background: rgba(13, 17, 23, 0.9) !important;
             border-radius: 8px !important;
             border: 1px solid rgba(255, 255, 255, 0.2) !important;
-            margin-top: 20px !important;
         }
         .leaflet-control-geocoder-form input { color: white !important; }
     </style>
@@ -33,8 +32,8 @@
 <body>
 
     <div class="glass-sidebar">
-        <strong>Monitoramento Real-Time</strong>
-        <div id="status-ana" style="color: #58a6ff; margin-top: 10px;">Aguardando sinal...</div>
+        <strong>Central de Comando</strong>
+        <div id="status-ana" style="color: #58a6ff; margin-top: 10px;">Conectando...</div>
     </div>
     
     <div id="map"></div>
@@ -45,23 +44,23 @@
     <script type="module">
         import { monitorarEntregador } from './app.js';
 
-        // Inicializa o mapa
+        // 1. Inicializa o mapa primeiro
         const map = L.map('map', { zoomControl: false }).setView([-25.4431, -49.2761], 14);
-        
         L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png').addTo(map);
 
-        // ADICIONA A BUSCA (Igual ao Google Maps)
+        // 2. Adiciona a barra de pesquisa (Agora o 'L' já existe!)
         L.Control.geocoder({
             defaultMarkGeocode: false,
-            placeholder: "Buscar endereço...",
+            placeholder: "Pesquisar rua para entrega...",
         })
         .on('markgeocode', function(e) {
-            var center = e.geocode.center;
-            L.marker(center).addTo(map).bindPopup(e.geocode.name).openPopup();
-            map.setView(center, 16); // Faz o zoom no endereço buscado
+            var latlng = e.geocode.center;
+            L.marker(latlng).addTo(map).bindPopup(e.geocode.name).openPopup();
+            map.setView(latlng, 16);
         })
         .addTo(map);
 
+        // 3. Configura a Moto
         const motoIcon = L.icon({
             iconUrl: 'https://cdn-icons-png.flaticon.com/512/2972/2972185.png',
             iconSize: [45, 45],
@@ -70,9 +69,10 @@
 
         let marker;
 
+        // 4. Conecta no Firebase
         monitorarEntregador('8zlr1Gb8EDj6JdRXHfNR', (data) => {
             const { lat, lng, nome } = data;
-            document.getElementById('status-ana').innerHTML = nome;
+            document.getElementById('status-ana').innerHTML = nome + " em trânsito";
 
             if (!marker) {
                 marker = L.marker([lat, lng], { icon: motoIcon }).addTo(map);
