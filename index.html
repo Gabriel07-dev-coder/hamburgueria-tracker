@@ -2,32 +2,34 @@
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Foody Delivery Tracker</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <link rel="stylesheet" href="style.css">
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 </head>
 <body>
-    <div id="map"></div>
 
-    <div class="top-bar glass-sidebar" style="top: 20px; left: 20px; right: 20px; display: flex; gap: 10px; position: absolute; z-index: 1000;">
-    <input type="text" id="pedido-id" placeholder="100" style="width: 100px; padding: 10px; border-radius: 8px; border: none;">
-    <input type="text" id="pedido-endereco" placeholder="Scooby Dog - Itupava" style="flex: 1; padding: 10px; border-radius: 8px; border: none;">
-    <input type="text" id="pedido-taxa" placeholder="8,80" style="width: 100px; padding: 10px; border-radius: 8px; border: none;">
-    
-    <button onclick="adicionarNovoPedido()" style="background: #007bff; color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer;">Adicionar</button>
-</div>
+    <div id="map" style="height: 100vh; width: 100vw; position: fixed; top: 0; left: 0; z-index: 0;"></div>
 
-    <div class="left-panel glass-sidebar">
-        <h3 class="panel-header">Foody Delivery</h3>
-        <div class="status-buttons">
-            <button class="status-btn active" data-status="ativos">Ativos</button>
-            <button class="status-btn" data-status="finalizados">Finalizados</button>
+    <div class="top-bar glass-sidebar" style="position: absolute; top: 20px; left: 20px; right: 20px; z-index: 1000; display: flex; gap: 10px; background: rgba(255,255,255,0.9); padding: 15px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.2);">
+        <input type="text" id="pedido-id" placeholder="N° do Pedido" style="width: 100px; padding: 10px; border: 1px solid #ddd; border-radius: 8px;">
+        <input type="text" id="pedido-endereco" placeholder="Endereço Completo (incluindo número)" style="flex: 1; padding: 10px; border: 1px solid #ddd; border-radius: 8px;">
+        <input type="text" id="pedido-taxa" placeholder="Taxa (ex: 8.80)" style="width: 100px; padding: 10px; border: 1px solid #ddd; border-radius: 8px;">
+        <button onclick="adicionarNovoPedido()" style="background: #007bff; color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-weight: bold;">Adicionar</button>
+    </div>
+
+    <div class="left-panel glass-sidebar" style="position: absolute; top: 100px; left: 20px; width: 300px; z-index: 1000; background: rgba(255,255,255,0.9); padding: 15px; border-radius: 12px; max-height: 70vh; overflow-y: auto; box-shadow: 0 4px 15px rgba(0,0,0,0.2);">
+        <h3 style="margin-top: 0; color: #333; font-size: 18px;">Foody Delivery</h3>
+        <div class="status-tabs" style="display: flex; gap: 5px; margin-bottom: 15px;">
+            <button style="flex: 1; padding: 8px; border-radius: 8px; border: none; background: #00ced1; color: white; cursor: pointer;">Ativos</button>
+            <button style="flex: 1; padding: 8px; border-radius: 8px; border: none; background: #eee; cursor: pointer;">Finalizados</button>
         </div>
-        <div id="lista-pedidos" class="pedidos-container">
+        
+        <div id="lista-pedidos">
             </div>
     </div>
 
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-    <script type="module" src="app.js"></script>
+    <script src="app.js"></script>
 </body>
 </html>
