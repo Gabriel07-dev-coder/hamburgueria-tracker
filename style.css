@@ -1,77 +1,35 @@
-/* --- estilo.css - Versão Profissional (PC) --- */
-
-/* Reset básico para o mapa ocupar tudo */
-body, html {
-    margin: 0;
-    padding: 0;
-    height: 100vh;
-    width: 100vw;
-    overflow: hidden;
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    background-color: #0d1117;
-}
-
-/* O MAPA É O FUNDO DA TELA */
-#map {
-    height: 100vh;
-    width: 100vw;
-    position: absolute;
-    top: 0;
-    left: 0;
-    z-index: 1;
-}
-
-/* PAINEL LATERAL FLUTUANTE (Efeito Vidro) */
-.glass-sidebar {
-    position: absolute;
-    top: 20px;
-    left: 20px;
-    width: 300px;
-    background: rgba(255, 255, 255, 0.1);
-    backdrop-filter: blur(15px); /* Desfoca o mapa atrás */
-    -webkit-backdrop-filter: blur(15px);
-    border-radius: 15px;
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
-    z-index: 1000;
-    padding: 20px;
-    color: white;
-}
-
-/* Título e Status */
-.sidebar-title {
-    color: #00a8ff;
-    margin: 0 0 10px 0;
-    font-size: 1.2rem;
-}
-
-.status-box {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    margin-bottom: 20px;
-    font-size: 0.9rem;
-}
-
-.online-dot {
-    width: 10px;
-    height: 10px;
-    background-color: #2ecc71;
-    border-radius: 50%;
-    box-shadow: 0 0 8px #2ecc71;
-}
-
-/* CONTADOR DE ENTREGAS (Canto superior direito) */
-.glass-counter {
-    position: absolute;
-    top: 20px;
-    right: 20px;
-    background: rgba(0, 0, 0, 0.6);
-    backdrop-filter: blur(10px);
-    border-radius: 10px;
-    padding: 10px 20px;
-    z-index: 1000;
-    color: white;
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    text-align: center;
-}
+<style>
+    .glass-sidebar {
+        background: rgba(0, 0, 0, 0.7);
+        backdrop-filter: blur(10px);
+        border-radius: 20px;
+        padding: 20px;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        color: white;
+        font-family: 'Poppins', sans-serif;
+    }
+    .route-btn {
+        flex-grow: 1;
+        background: #008ba3;
+        color: white;
+        border: none;
+        padding: 10px;
+        border-radius: 15px;
+        cursor: pointer;
+    }
+    .finish-btn {
+        background: #28a745;
+        color: white;
+        border: none;
+        padding: 10px;
+        border-radius: 10px;
+        cursor: pointer;
+    }
+    .card-historico {
+        background: rgba(255, 255, 255, 0.05);
+        padding: 10px;
+        border-radius: 10px;
+        margin-bottom: 8px;
+        border-left: 4px solid #28a745;
+    }
+</style>
