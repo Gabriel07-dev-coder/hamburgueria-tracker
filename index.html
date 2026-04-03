@@ -1,100 +1,59 @@
-<!DOCTYPE html>
-<html lang="pt-br">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Comando Logístico - Hamburgueria</title>
+<div class="glass-sidebar" style="left: auto; right: 20px; width: 300px;">
+    <h3 style="text-align: center; color: #00ced1; margin-top: 0;">ENTREGAS</h3>
     
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-    <link rel="stylesheet" href="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.css" />
-    
-    <style>
-        body, html { margin: 0; padding: 0; height: 100vh; width: 100vw; overflow: hidden; font-family: 'Poppins', sans-serif; background-color: #0d1117; color: white; }
-        #map { height: 100vh; width: 100vw; position: absolute; z-index: 1; }
-
-        /* Painel Lateral (Entregas Pendentes) */
-        .sidebar-right {
-            position: absolute; top: 20px; right: 20px; width: 280px;
-            background: rgba(255, 255, 255, 0.05); backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px);
-            border-radius: 20px; border: 1px solid rgba(255, 255, 255, 0.1);
-            z-index: 1000; padding: 20px; box-shadow: 0 8px 32px rgba(0,0,0,0.5);
-        }
-
-        .delivery-item {
-            background: #008ba3; color: white; padding: 12px; margin: 10px 0;
-            border-radius: 12px; text-align: center; font-size: 14px; font-weight: 500;
-            cursor: pointer; transition: 0.3s; border: none; width: 100%;
-        }
-
-        .delivery-item:hover { background: #00a8c5; transform: scale(1.02); }
-
-        /* Painel Inferior (Contador) */
-        .counter-panel {
-            position: absolute; bottom: 30px; left: 20px; width: 200px;
-            background: rgba(255, 255, 255, 0.05); backdrop-filter: blur(15px);
-            border-radius: 20px; border: 1px solid rgba(255, 255, 255, 0.1);
-            z-index: 1000; padding: 15px; text-align: center;
-        }
-
-        .count-number { font-size: 32px; font-weight: bold; color: #00ced1; margin-top: 5px; }
-
-        /* Estilo da Busca */
-        .leaflet-control-geocoder { background: #161b22 !important; border: 1px solid #30363d !important; border-radius: 10px !important; }
-        .leaflet-control-geocoder-form input { color: white !important; }
-    </style>
-</head>
-<body>
-
-    <div class="sidebar-right">
-        <div style="text-align: center; margin-bottom: 15px; font-weight: bold; letter-spacing: 1px;">ENTREGAS ATIVAS</div>
-        <button class="delivery-item" onclick="focarEntrega(-25.4614, -49.2275)">Rua João Guerino Fabri</button>
-        <button class="delivery-item" onclick="focarEntrega(-25.4411, -49.2120)">Rua Bela Vista</button>
-        <button class="delivery-item" onclick="focarEntrega(-25.4520, -49.2310)">Rua Luiz</button>
+    <div class="delivery-list">
+        <button class="route-btn active" onclick="focarRota(-25.4614, -49.2275, 'Rua João Guerino Fabri')">
+            Rua João Guerino Fabri
+        </button>
+        <button class="route-btn" onclick="focarRota(-25.4411, -49.2120, 'Rua Bela Vista')">
+            Rua Bela Vista
+        </button>
+        <button class="route-btn" onclick="focarRota(-25.4520, -49.2310, 'Rua Luiz')">
+            Rua Luiz
+        </button>
     </div>
+</div>
 
-    <div class="counter-panel">
-        <div style="font-size: 12px; opacity: 0.8;">ENTREGAS CONCLUÍDAS</div>
-        <div class="count-number">10</div>
-    </div>
-    
-    <div id="map"></div>
+<div class="glass-sidebar" style="top: auto; bottom: 20px; height: auto; padding: 15px; text-align: center;">
+    <span style="font-size: 12px; opacity: 0.8;">ENTREGAS REALIZADAS</span>
+    <div style="font-size: 32px; font-weight: bold; color: #00ced1; margin-top: 5px;">10</div>
+</div>
 
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-    <script src="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.js"></script>
+<style>
+    /* Estilos para os novos botões de rota */
+    .route-btn {
+        width: 100%;
+        background: #008ba3;
+        color: white;
+        border: none;
+        padding: 12px;
+        margin-bottom: 10px;
+        border-radius: 25px; /* Botão arredondado igual ao seu desenho */
+        font-family: 'Poppins', sans-serif;
+        cursor: pointer;
+        transition: 0.3s;
+        font-weight: 500;
+    }
 
-    <script type="module">
-        import { monitorarEntregador } from './app.js';
+    .route-btn:hover {
+        background: #00ced1;
+        transform: translateY(-2px);
+    }
 
-        const map = L.map('map', { zoomControl: false }).setView([-25.4431, -49.2761], 14);
+    .route-btn.active {
+        background: #00ced1;
+        box-shadow: 0 0 15px rgba(0, 206, 209, 0.4);
+    }
+</style>
+
+<script>
+    // Função para focar o mapa no destino clicado
+    function focarRota(lat, lng, nome) {
+        map.flyTo([lat, lng], 16, { duration: 1.5 });
         
-        // Mapa Dark que você já está usando
-        L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png').addTo(map);
-
-        // Função para focar o mapa quando clicar no botão da rua
-        window.focarEntrega = (lat, lng) => {
-            map.flyTo([lat, lng], 16);
-            L.marker([lat, lng]).addTo(map).bindPopup("Destino da Entrega").openPopup();
-        };
-
-        const motoIcon = L.icon({
-            iconUrl: 'https://cdn-icons-png.flaticon.com/512/2972/2972185.png',
-            iconSize: [45, 45],
-            iconAnchor: [22, 45]
-        });
-
-        let marker;
-
-        monitorarEntregador('8zlr1Gb8EDj6JdRXHfNR', (data) => {
-            const { lat, lng, nome } = data;
-            if (!marker) {
-                marker = L.marker([lat, lng], { icon: motoIcon }).addTo(map).bindTooltip(nome, { permanent: true, direction: 'top' });
-            } else {
-                marker.setLatLng([lat, lng]);
-            }
-        });
-
-        // Adiciona a barra de busca
-        L.Control.geocoder({ placeholder: "Novo pedido..." }).addTo(map);
-    </script>
-</body>
-</html>
+        // Adiciona um marcador de destino (opcional)
+        L.marker([lat, lng]).addTo(map)
+            .bindPopup("<b>Destino:</b><br>" + nome)
+            .openPopup();
+    }
+</script>
