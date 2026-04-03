@@ -1,39 +1,23 @@
-import { db } from './firebase-config.js';
-import { doc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+<script>
+    // Ponto de partida (Ex: Scooby Dog)
+    const baseCoords = L.latLng(-25.4431, -49.2761); 
 
-// 1. Função para o celular da ANA (entregador.html)
-export function iniciarRastreamento(id) {
-    if ("geolocation" in navigator) {
-        alert("GPS Iniciado! Tentando capturar posição..."); 
+    function finalizarComKM(idDiv, nomeRua, coordsDestino) {
+        // 1. Remove da lista de ativas
+        document.getElementById(idDiv).remove();
 
-        navigator.geolocation.watchPosition((position) => {
-            const docRef = doc(db, "entregadores", id);
-            
-            // setDoc cria o documento se ele não existir (merge: true mantém outros dados)
-            setDoc(docRef, {
-                lat: position.coords.latitude,
-                lng: position.coords.longitude,
-                status: "online",
-                nome: "ANA"
-            }, { merge: true }).then(() => {
-                console.log("Posição gravada com sucesso!");
-            }).catch(err => {
-                console.error("Erro ao gravar no banco:", err);
-            });
-        }, (error) => {
-            alert("Erro no GPS: " + error.message);
-        }, { enableHighAccuracy: true });
-    } else {
-        alert("Seu celular não suporta GPS.");
+        // 2. Calcula KM real usando o Leaflet
+        const destino = L.latLng(coordsDestino[0], coordsDestino[1]);
+        const distanciaKM = (baseCoords.distanceTo(destino) / 1000).toFixed(2);
+
+        // 3. Adiciona apenas as informações no histórico
+        const historico = document.getElementById('historico-entregas');
+        const novoCard = document.createElement('div');
+        novoCard.className = 'card-historico';
+        novoCard.innerHTML = `
+            <div style="font-size: 13px; font-weight: bold;">${nomeRua}</div>
+            <div style="font-size: 11px; opacity: 0.7;">Distância: ${distanciaKM} km</div>
+        `;
+        historico.prepend(novoCard); // Coloca a mais recente no topo
     }
-}
-
-// 2. Função para o seu MAPA (index.html)
-export function monitorarEntregador(id, callback) {
-    const docRef = doc(db, "entregadores", id);
-    onSnapshot(docRef, (docSnap) => {
-        if (docSnap.exists()) {
-            callback(docSnap.data());
-        }
-    });
-}
+</script>
