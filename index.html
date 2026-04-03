@@ -9,12 +9,13 @@
 <body>
     <div id="map"></div>
 
-    <div class="top-bar glass-sidebar">
-        <input type="text" id="pedido-id" placeholder="N° do Pedido">
-        <input type="text" id="pedido-endereco" placeholder="Endereço Completo (incluindo número)">
-        <input type="text" id="pedido-taxa" placeholder="Taxa de Entrega (ex: 5.5)">
-        <button id="add-pedido-btn">Adicionar</button>
-    </div>
+    <div class="top-bar glass-sidebar" style="top: 20px; left: 20px; right: 20px; display: flex; gap: 10px; position: absolute; z-index: 1000;">
+    <input type="text" id="pedido-id" placeholder="100" style="width: 100px; padding: 10px; border-radius: 8px; border: none;">
+    <input type="text" id="pedido-endereco" placeholder="Scooby Dog - Itupava" style="flex: 1; padding: 10px; border-radius: 8px; border: none;">
+    <input type="text" id="pedido-taxa" placeholder="8,80" style="width: 100px; padding: 10px; border-radius: 8px; border: none;">
+    
+    <button onclick="adicionarNovoPedido()" style="background: #007bff; color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer;">Adicionar</button>
+</div>
 
     <div class="left-panel glass-sidebar">
         <h3 class="panel-header">Foody Delivery</h3>
