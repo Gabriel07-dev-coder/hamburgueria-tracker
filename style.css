@@ -1,13 +1,14 @@
 /* --- estilo.css - Versão Profissional (PC) --- */
 
-/* Reset básico e tipografia limpa */
+/* Reset básico para o mapa ocupar tudo */
 body, html {
     margin: 0;
     padding: 0;
     height: 100vh;
+    width: 100vw;
     overflow: hidden;
-    font-family: 'Poppins', 'Helvetica Neue', Helvetica, Arial, sans-serif; /* Fonte mais profissional */
-    background-color: #0d1117; /* Um fundo quase preto para contraste */
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: #0d1117;
 }
 
 /* O MAPA É O FUNDO DA TELA */
@@ -17,93 +18,60 @@ body, html {
     position: absolute;
     top: 0;
     left: 0;
-    z-index: 1; /* Fica no fundo */
+    z-index: 1;
 }
 
-/* --- PAINÉIS FLUTUANTES ("GLASSMORFISMO") --- */
-
-/* Sidebar Esquerda (Entregas e Status) */
+/* PAINEL LATERAL FLUTUANTE (Efeito Vidro) */
 .glass-sidebar {
     position: absolute;
     top: 20px;
     left: 20px;
-    width: 280px;
-    max-height: calc(100vh - 40px);
-    background: rgba(255, 255, 255, 0.05); /* Efeito de vidro */
-    backdrop-filter: blur(12px); /* Desfoca o fundo do mapa */
-    border-radius: 16px;
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+    width: 300px;
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(15px); /* Desfoca o mapa atrás */
+    -webkit-backdrop-filter: blur(15px);
+    border-radius: 15px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
     z-index: 1000;
     padding: 20px;
-    display: flex;
-    flex-direction: column;
-    overflow-y: auto; /* Se a lista crescer, cria scroll */
+    color: white;
 }
 
-/* Contador de Entregas (Topo Direito) */
+/* Título e Status */
+.sidebar-title {
+    color: #00a8ff;
+    margin: 0 0 10px 0;
+    font-size: 1.2rem;
+}
+
+.status-box {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 20px;
+    font-size: 0.9rem;
+}
+
+.online-dot {
+    width: 10px;
+    height: 10px;
+    background-color: #2ecc71;
+    border-radius: 50%;
+    box-shadow: 0 0 8px #2ecc71;
+}
+
+/* CONTADOR DE ENTREGAS (Canto superior direito) */
 .glass-counter {
     position: absolute;
     top: 20px;
     right: 20px;
-    background: rgba(13, 17, 23, 0.85); /* Vidro mais escuro e sólido */
+    background: rgba(0, 0, 0, 0.6);
     backdrop-filter: blur(10px);
-    border-radius: 12px;
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+    border-radius: 10px;
+    padding: 10px 20px;
     z-index: 1000;
-    padding: 12px 18px;
     color: white;
+    border: 1px solid rgba(255, 255, 255, 0.1);
     text-align: center;
-    display: flex;
-    align-items: center;
-    gap: 10px;
 }
-
-/* Títulos Profissionais */
-.sidebar-title {
-    color: #58a6ff; /* Azul da sua hamburgueria em tom pro */
-    margin: 0 0 15px 0;
-    font-size: 18px;
-    font-weight: 600;
-}
-
-/* Itens da Lista de Entregas (em vez de botões) */
-.delivery-item {
-    background: rgba(255, 255, 255, 0.03);
-    border: 1px solid rgba(255, 255, 255, 0.05);
-    border-radius: 8px;
-    padding: 12px;
-    margin-bottom: 10px;
-    color: #c9d1d9;
-    font-size: 14px;
-    transition: background 0.2s ease, border-color 0.2s ease;
-}
-
-.delivery-item:hover {
-    background: rgba(88, 166, 255, 0.1); /* Brilho azul ao passar o mouse */
-    border-color: rgba(88, 166, 255, 0.3);
-}
-
-.delivery-item strong {
-    color: white;
-    display: block;
-    margin-bottom: 4px;
-}
-
-.delivery-item span {
-    color: #8b949e;
-}
-
-/* Painel de Status da Ana (Topo da Sidebar) */
-.ana-status-panel {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    margin-bottom: 20px;
-    padding-bottom: 15px;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-}
-
-.ana-status-panel strong { color: white; font-size: 16px; }
-.ana-status-dot { width: 10px; height: 10px; border-radius: 50%; background: #2ea043; /* Ponto verde online */ }
