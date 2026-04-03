@@ -1,14 +1,13 @@
-// 1. Defina as coordenadas base (Scooby Dog)
+// Configuração da base (Scooby Dog)
 const baseCoords = L.latLng(-25.4431, -49.2761);
 
-// 2. Crie o mapa APENAS UMA VEZ
+// Inicializa o mapa uma única vez
 const map = L.map('map').setView([-25.4431, -49.2761], 13);
+window.map = map; // Exporta para o focarRota funcionar
 
-L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
-    attribution: '© OpenStreetMap'
-}).addTo(map);
+L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png').addTo(map);
 
-// 3. Suas funções de cálculo e foco
+// Função para finalizar entrega
 window.finalizarComKM = function(idDiv, nomeRua, coordsDestino) {
     const item = document.getElementById(idDiv);
     if (item) item.remove();
@@ -24,4 +23,10 @@ window.finalizarComKM = function(idDiv, nomeRua, coordsDestino) {
         <div style="font-size: 11px; color: #00ced1;">Distância: ${distanciaKM} km</div>
     `;
     historico.prepend(card);
+};
+
+// Função para focar no mapa
+window.focarRota = function(lat, lng, nome) {
+    map.flyTo([lat, lng], 16);
+    L.marker([lat, lng]).addTo(map).bindPopup(nome).openPopup();
 };
