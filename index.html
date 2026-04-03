@@ -3,22 +3,58 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Painel Logística - Hamburgueria</title>
+    <title>Comando Logístico - Hamburgueria</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    
     <style>
-        #map { height: 100vh; width: 100%; }
-        body { margin: 0; font-family: Arial, sans-serif; }
-        .painel-de-informacoes {
-            position: absolute; top: 10px; right: 10px;
-            background: white; padding: 10px; z-index: 1000;
-            border-radius: 8px; box-shadow: 0 0 15px rgba(0,0,0,0.2);
+        /* DESIGN PROFISSIONAL - CENTRAL DE COMANDO */
+        body, html { margin: 0; padding: 0; height: 100vh; width: 100vw; overflow: hidden; font-family: 'Poppins', sans-serif; background-color: #0d1117; }
+        
+        #map { height: 100vh; width: 100vw; position: absolute; top: 0; left: 0; z-index: 1; }
+
+        /* PAINEL LATERAL FLUTUANTE (EFEITO VIDRO) */
+        .glass-sidebar {
+            position: absolute; top: 20px; left: 20px; width: 280px;
+            background: rgba(255, 255, 255, 0.05); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+            border-radius: 16px; border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4); z-index: 1000; padding: 20px; color: white;
+        }
+
+        .status-header { display: flex; align-items: center; gap: 10px; margin-bottom: 15px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 10px; }
+        .online-dot { width: 10px; height: 10px; background: #2ea043; border-radius: 50%; box-shadow: 0 0 10px #2ea043; }
+        
+        .sidebar-title { font-size: 14px; color: #8b949e; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 10px; }
+        
+        #status-ana { font-size: 16px; font-weight: 600; color: #58a6ff; }
+
+        /* CONTADOR NO TOPO DIREITO */
+        .glass-counter {
+            position: absolute; top: 20px; right: 20px;
+            background: rgba(13, 17, 23, 0.8); backdrop-filter: blur(10px);
+            border-radius: 12px; border: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 10px 20px; z-index: 1000; color: white; text-align: center;
         }
     </style>
 </head>
 <body>
-    <div class="painel-de-informacoes">
-        <h3 style="margin:0 0 5px 0">Entregas Ativas</h3>
+
+    <div class="glass-sidebar">
+        <div class="status-header">
+            <div class="online-dot"></div>
+            <strong>Monitoramento Real-Time</strong>
+        </div>
+        <div class="sidebar-title">Entregador Ativo</div>
         <div id="status-ana">Aguardando sinal...</div>
+        
+        <div style="margin-top: 20px; font-size: 11px; color: #8b949e;">
+            Localização atualizada via Firebase
+        </div>
+    </div>
+
+    <div class="glass-counter">
+        <div style="font-size: 11px; color: #8b949e;">Entregas Realizadas</div>
+        <div style="font-size: 24px; font-weight: 600;">10</div>
     </div>
     
     <div id="map"></div>
@@ -28,7 +64,7 @@
     <script type="module">
         import { monitorarEntregador } from './app.js';
 
-        // Configuração do Ícone da Moto
+        // Configuração do Ícone da Moto (Sua moto azul!)
         const motoIcon = L.icon({
             iconUrl: 'https://cdn-icons-png.flaticon.com/512/2972/2972185.png',
             iconSize: [45, 45],
@@ -36,22 +72,29 @@
             popupAnchor: [0, -45]
         });
 
-        // Inicializa o mapa em Curitiba
-        const map = L.map('map').setView([-25.4431, -49.2761], 14);
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+        // Inicializa o mapa em Curitiba (Modo Escuro para combinar com o design)
+        const map = L.map('map', { zoomControl: false }).setView([-25.4431, -49.2761], 14);
+        
+        // TileLayer do CartoDB (Mais profissional e escuro)
+        L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+            attribution: '&copy; OpenStreetMap'
+        }).addTo(map);
+
+        // Adiciona o controle de zoom em uma posição melhor
+        L.control.zoom({ position: 'bottomright' }).addTo(map);
 
         let marker;
 
-        // Monitora a ANA (ID do seu banco de dados)
+        // Monitora a ANA no Firebase
         monitorarEntregador('8zlr1Gb8EDj6JdRXHfNR', (data) => {
             const { lat, lng, nome, status } = data;
             
-            document.getElementById('status-ana').innerHTML = 
-                `<b>${nome}:</b> <span style="color: green;">${status}</span>`;
+            // Atualiza o painel lateral
+            document.getElementById('status-ana').innerHTML = nome;
 
             if (!marker) {
-                // Aqui a moto é criada no mapa
-                marker = L.marker([lat, lng], { icon: motoIcon }).addTo(map).bindPopup(nome).openPopup();
+                marker = L.marker([lat, lng], { icon: motoIcon }).addTo(map).bindPopup(`<b>${nome}</b><br>${status}`).openPopup();
+                map.panTo([lat, lng]);
             } else {
                 marker.setLatLng([lat, lng]);
             }
