@@ -26,7 +26,9 @@ window.finalizarComKM = function(idDiv, nomeRua, coordsDestino) {
 };
 
 // Função para focar no mapa
-window.focarRota = function(lat, lng, nome) {
-    map.flyTo([lat, lng], 16);
-    L.marker([lat, lng]).addTo(map).bindPopup(nome).openPopup();
+window.finalizarEntregaEditada = function(idDiv, idInput, coordsDestino) {
+    const nomeRuaEditado = document.getElementById(idInput).value; // Pega o que foi digitado
+    
+    // Chama a lógica de KM que você já tem
+    finalizarComKM(idDiv, nomeRuaEditado, coordsDestino);
 };
