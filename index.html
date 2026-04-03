@@ -1,40 +1,85 @@
-<link rel="stylesheet" href="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.css" />
-<style>
-    /* Estilizando a barra de pesquisa para o seu Modo Dark */
-    .leaflet-control-geocoder {
-        background: rgba(13, 17, 23, 0.9) !important;
-        backdrop-filter: blur(10px);
-        border: 1px solid rgba(255, 255, 255, 0.1) !important;
-        border-radius: 8px !important;
-        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5) !important;
-    }
-    .leaflet-control-geocoder-icon { background-color: transparent !important; filter: invert(1); }
-    .leaflet-control-geocoder-form input { color: white !important; font-family: 'Poppins', sans-serif; }
-    .leaflet-control-geocoder-alternatives { background: rgba(13, 17, 23, 0.95) !important; color: white; }
-</style>
-
-<script src="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.js"></script>
-<script>
-    // Inicializa a barra de pesquisa (Google Maps Style)
-    L.Control.geocoder({
-        defaultMarkGeocode: false,
-        placeholder: "Pesquisar endereço para entrega...",
-        errorMessage: "Endereço não encontrado."
-    })
-    .on('markgeocode', function(e) {
-        var bbox = e.geocode.bbox;
-        var poly = L.polygon([
-            bbox.getSouthEast(),
-            bbox.getNorthEast(),
-            bbox.getNorthWest(),
-            bbox.getSouthWest()
-        ]);
-        map.fitBounds(poly.getBounds()); // Faz o zoom automático na rua pesquisada
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Comando Logístico - Hamburgueria</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+    
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.css" />
+    
+    <style>
+        body, html { margin: 0; padding: 0; height: 100vh; width: 100vw; overflow: hidden; font-family: 'Poppins', sans-serif; background-color: #0d1117; }
+        #map { height: 100vh; width: 100vw; position: absolute; top: 0; left: 0; z-index: 1; }
         
-        // Opcional: Adiciona um marcador temporário no destino
-        L.marker(e.geocode.center).addTo(map)
-            .bindPopup(e.geocode.name)
-            .openPopup();
-    })
-    .addTo(map);
-</script>
+        .glass-sidebar {
+            position: absolute; top: 20px; left: 20px; width: 280px;
+            background: rgba(255, 255, 255, 0.05); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+            border-radius: 16px; border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4); z-index: 1000; padding: 20px; color: white;
+        }
+
+        /* Estilo da barra de busca igual Google Maps Dark */
+        .leaflet-control-geocoder {
+            background: rgba(13, 17, 23, 0.9) !important;
+            border-radius: 8px !important;
+            border: 1px solid rgba(255, 255, 255, 0.2) !important;
+            margin-top: 20px !important;
+        }
+        .leaflet-control-geocoder-form input { color: white !important; }
+    </style>
+</head>
+<body>
+
+    <div class="glass-sidebar">
+        <strong>Monitoramento Real-Time</strong>
+        <div id="status-ana" style="color: #58a6ff; margin-top: 10px;">Aguardando sinal...</div>
+    </div>
+    
+    <div id="map"></div>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.js"></script>
+
+    <script type="module">
+        import { monitorarEntregador } from './app.js';
+
+        // Inicializa o mapa
+        const map = L.map('map', { zoomControl: false }).setView([-25.4431, -49.2761], 14);
+        
+        L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png').addTo(map);
+
+        // ADICIONA A BUSCA (Igual ao Google Maps)
+        L.Control.geocoder({
+            defaultMarkGeocode: false,
+            placeholder: "Buscar endereço...",
+        })
+        .on('markgeocode', function(e) {
+            var center = e.geocode.center;
+            L.marker(center).addTo(map).bindPopup(e.geocode.name).openPopup();
+            map.setView(center, 16); // Faz o zoom no endereço buscado
+        })
+        .addTo(map);
+
+        const motoIcon = L.icon({
+            iconUrl: 'https://cdn-icons-png.flaticon.com/512/2972/2972185.png',
+            iconSize: [45, 45],
+            iconAnchor: [22, 45]
+        });
+
+        let marker;
+
+        monitorarEntregador('8zlr1Gb8EDj6JdRXHfNR', (data) => {
+            const { lat, lng, nome } = data;
+            document.getElementById('status-ana').innerHTML = nome;
+
+            if (!marker) {
+                marker = L.marker([lat, lng], { icon: motoIcon }).addTo(map);
+            } else {
+                marker.setLatLng([lat, lng]);
+            }
+        });
+    </script>
+</body>
+</html>
