@@ -7,10 +7,9 @@
     
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <link rel="stylesheet" href="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.css" />
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
     
     <style>
-        body, html { margin: 0; padding: 0; height: 100vh; width: 100vw; overflow: hidden; font-family: 'Poppins', sans-serif; background-color: #0d1117; }
+        body, html { margin: 0; padding: 0; height: 100vh; width: 100vw; overflow: hidden; font-family: Arial, sans-serif; background-color: #0d1117; }
         #map { height: 100vh; width: 100vw; position: absolute; top: 0; left: 0; z-index: 1; }
         
         .glass-sidebar {
@@ -21,11 +20,7 @@
         }
 
         /* Estilo Dark para a barra de pesquisa */
-        .leaflet-control-geocoder {
-            background: rgba(13, 17, 23, 0.9) !important;
-            border-radius: 8px !important;
-            border: 1px solid rgba(255, 255, 255, 0.2) !important;
-        }
+        .leaflet-control-geocoder { background: #161b22 !important; border: 1px solid #30363d !important; border-radius: 8px !important; }
         .leaflet-control-geocoder-form input { color: white !important; }
     </style>
 </head>
@@ -33,7 +28,7 @@
 
     <div class="glass-sidebar">
         <strong>Central de Comando</strong>
-        <div id="status-ana" style="color: #58a6ff; margin-top: 10px;">Conectando...</div>
+        <div id="status-ana" style="color: #58a6ff; margin-top: 10px;">Carregando...</div>
     </div>
     
     <div id="map"></div>
@@ -44,42 +39,44 @@
     <script type="module">
         import { monitorarEntregador } from './app.js';
 
-        // 1. Inicializa o mapa primeiro
-        const map = L.map('map', { zoomControl: false }).setView([-25.4431, -49.2761], 14);
-        L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png').addTo(map);
+        // Espera o Leaflet (L) estar disponível
+        window.onload = () => {
+            const map = L.map('map', { zoomControl: false }).setView([-25.4431, -49.2761], 14);
+            
+            L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png').addTo(map);
 
-        // 2. Adiciona a barra de pesquisa (Agora o 'L' já existe!)
-        L.Control.geocoder({
-            defaultMarkGeocode: false,
-            placeholder: "Pesquisar rua para entrega...",
-        })
-        .on('markgeocode', function(e) {
-            var latlng = e.geocode.center;
-            L.marker(latlng).addTo(map).bindPopup(e.geocode.name).openPopup();
-            map.setView(latlng, 16);
-        })
-        .addTo(map);
+            // Adiciona a busca
+            L.Control.geocoder({
+                defaultMarkGeocode: false,
+                placeholder: "Buscar endereço...",
+            })
+            .on('markgeocode', function(e) {
+                var center = e.geocode.center;
+                L.marker(center).addTo(map).bindPopup(e.geocode.name).openPopup();
+                map.setView(center, 16);
+            })
+            .addTo(map);
 
-        // 3. Configura a Moto
-        const motoIcon = L.icon({
-            iconUrl: 'https://cdn-icons-png.flaticon.com/512/2972/2972185.png',
-            iconSize: [45, 45],
-            iconAnchor: [22, 45]
-        });
+            const motoIcon = L.icon({
+                iconUrl: 'https://cdn-icons-png.flaticon.com/512/2972/2972185.png',
+                iconSize: [45, 45],
+                iconAnchor: [22, 45]
+            });
 
-        let marker;
+            let marker;
 
-        // 4. Conecta no Firebase
-        monitorarEntregador('8zlr1Gb8EDj6JdRXHfNR', (data) => {
-            const { lat, lng, nome } = data;
-            document.getElementById('status-ana').innerHTML = nome + " em trânsito";
+            // Monitora a Ana
+            monitorarEntregador('8zlr1Gb8EDj6JdRXHfNR', (data) => {
+                const { lat, lng, nome } = data;
+                document.getElementById('status-ana').innerHTML = nome + " em trânsito";
 
-            if (!marker) {
-                marker = L.marker([lat, lng], { icon: motoIcon }).addTo(map);
-            } else {
-                marker.setLatLng([lat, lng]);
-            }
-        });
+                if (!marker) {
+                    marker = L.marker([lat, lng], { icon: motoIcon }).addTo(map);
+                } else {
+                    marker.setLatLng([lat, lng]);
+                }
+            });
+        };
     </script>
 </body>
 </html>
