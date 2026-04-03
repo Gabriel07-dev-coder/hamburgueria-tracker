@@ -53,7 +53,24 @@ function carregarPedidos() {
         `;
         lista.appendChild(item);
     });
-}
+}window.adicionarNovoPedido = function() {
+    const id = document.getElementById('pedido-id').value;
+    const endereco = document.getElementById('pedido-endereco').value;
+    const taxa = document.getElementById('pedido-taxa').value;
+
+    if (id && endereco) {
+        console.log("Adicionando pedido:", id, endereco, taxa);
+        // Aqui vai a sua lógica para colocar o marcador no mapa de Curitiba
+        // E também para salvar no Firebase, se você já tiver configurado
+        
+        // Limpa os campos após adicionar
+        document.getElementById('pedido-id').value = '';
+        document.getElementById('pedido-endereco').value = '';
+        document.getElementById('pedido-taxa').value = '';
+    } else {
+        alert("Preencha o número do pedido e o endereço!");
+    }
+};
 
 // Inicializa
 carregarPedidos();
