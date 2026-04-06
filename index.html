@@ -2,73 +2,44 @@
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Painel do Entregador | Scooby Dog</title>
+    <title>Gestão Scooby Dog</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <style>
-        body { margin: 0; font-family: 'Arial', sans-serif; background: #f4f7f6; }
-        #map { height: 100vh; width: 100vw; position: fixed; z-index: 0; }
+        body { margin: 0; font-family: sans-serif; }
+        #map { height: 100vh; width: 100vw; position: fixed; }
 
-        /* Widget de Ganhos idêntico ao que você quer */
-        .ganhos-entregador {
-            position: absolute;
-            top: 20px;
-            left: 50%;
-            transform: translateX(-50%);
-            z-index: 1000;
-            background: #1e2124;
-            color: #00bcd4;
-            padding: 10px 25px;
-            border-radius: 30px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.4);
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            font-weight: bold;
+        /* Barra de Cadastro Superior */
+        .admin-bar {
+            position: absolute; top: 15px; left: 15px; right: 15px; z-index: 1000;
+            background: white; padding: 12px; border-radius: 10px;
+            display: flex; gap: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.2);
         }
+        .admin-bar input { padding: 10px; border: 1px solid #ddd; border-radius: 6px; }
+        .btn-add { background: #007bff; color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; }
 
-        /* Status de Rastreamento Ativo */
-        .status-tracker {
-            position: absolute;
-            bottom: 30px;
-            left: 20px;
-            right: 20px;
-            z-index: 1000;
-            background: white;
-            padding: 20px;
-            border-radius: 15px;
-            text-align: center;
-            box-shadow: 0 -5px 20px rgba(0,0,0,0.1);
+        /* Lista Lateral de Pedidos Ativos */
+        .side-panel {
+            position: absolute; top: 90px; left: 15px; width: 300px; z-index: 1000;
+            background: rgba(255,255,255,0.95); border-radius: 12px; padding: 15px;
+            max-height: 70vh; overflow-y: auto; box-shadow: 0 4px 15px rgba(0,0,0,0.1);
         }
     </style>
 </head>
 <body>
-
     <div id="map"></div>
 
-    <div class="ganhos-entregador">
-        <span style="color: #eee; font-size: 12px;">GANHOS DO DIA</span>
-        <span id="valor-total-entregador">R$ 0,00</span>
+    <div class="admin-bar">
+        <input type="text" id="p-id" placeholder="N°" style="width: 50px;">
+        <input type="text" id="p-end" placeholder="Endereço..." style="flex: 1;">
+        <input type="text" id="p-taxa" placeholder="Taxa" style="width: 80px;">
+        <button class="btn-add" onclick="novoPedido()">Adicionar</button>
     </div>
 
-    <div class="status-tracker">
-        <h2 style="margin: 0 0 10px 0;">Rastreamento Ativo</h2>
-        <p style="color: #666; margin: 5px 0;">Olá, Ana! Sua posição está sendo enviada para a hamburgueria.</p>
-        <div style="color: #2ed573; font-weight: bold; display: flex; align-items: center; justify-content: center; gap: 5px;">
-            <span style="font-size: 18px;">📡</span> GPS Conectado
-        </div>
+    <div class="side-panel">
+        <h3 style="margin-top: 0; border-bottom: 2px solid #00bcd4;">Entregas Ativas</h3>
+        <div id="lista-pedidos"></div>
     </div>
 
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-    <script>
-        // Inicialização simples para o entregador
-        const map = L.map('map', { zoomControl: false }).setView([-25.4614, -49.2275], 15);
-        L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png').addTo(map);
-
-        // Simulação de atualização de ganhos
-        function atualizarGanhos(valor) {
-            document.getElementById('valor-total-entregador').innerText = `R$ ${valor.toFixed(2).replace('.', ',')}`;
-        }
-    </script>
-</body>
+    <script src="app.js"></script> </body>
 </html>
