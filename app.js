@@ -1,20 +1,23 @@
 let map;
 let totalGanhos = 0;
-const baseCoords = [-25.4614, -49.2275]; // Scooby Dog - Itupava
+
+// Corrigido para Visconde de Nácar, 1440 - Onde você realmente está testando
+const baseCoords = [-25.4351, -49.2786]; 
 
 function inicializarMapa() {
     if (map !== undefined) {
         map.remove();
     }
 
-    map = L.map('map', { zoomControl: false }).setView(baseCoords, 15);
+    // Zoom 16 para detalhamento urbano do Centro de Curitiba
+    map = L.map('map', { zoomControl: false }).setView(baseCoords, 16);
 
-    // Tema Dark essencial para o estilo 99
+    // Tema Dark que você escolheu para o app do entregador
     L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png').addTo(map);
 
     L.circleMarker(baseCoords, {
         radius: 10, fillColor: "#ff4757", color: "white", weight: 3, fillOpacity: 1
-    }).addTo(map).bindPopup("Scooby Dog");
+    }).addTo(map).bindPopup("<b>Scooby Dog</b><br>Centro");
 }
 
 window.adicionarNovoPedido = function() {
@@ -24,17 +27,17 @@ window.adicionarNovoPedido = function() {
 
     if (!id || !endereco) return alert("Preencha os campos!");
 
-    const lat = baseCoords[0] + (Math.random() - 0.5) * 0.01;
-    const lng = baseCoords[1] + (Math.random() - 0.5) * 0.01;
+    // Fator de dispersão menor para os pedidos não caírem no meio do mato
+    const lat = baseCoords[0] + (Math.random() - 0.5) * 0.006;
+    const lng = baseCoords[1] + (Math.random() - 0.5) * 0.006;
 
     const marker = L.circleMarker([lat, lng], {
         radius: 8, fillColor: "#00bcd4", color: "white", weight: 2, fillOpacity: 1
     }).addTo(map);
 
-    // Inserção na sua nova .bottom-sheet
     const lista = document.getElementById('lista-pedidos');
     const card = document.createElement('div');
-    card.className = 'order-item'; // Usando a classe do seu CSS
+    card.className = 'order-item'; // Classe do seu CSS atualizado
     card.innerHTML = `
         <div class="order-info">
             <span class="order-number">#${id}</span>
@@ -47,7 +50,7 @@ window.adicionarNovoPedido = function() {
     `;
     lista.prepend(card);
     
-    // Limpa os campos para o próximo
+    // Limpeza automática para você não perder tempo
     document.getElementById('pedido-id').value = '';
     document.getElementById('pedido-endereco').value = '';
     document.getElementById('pedido-taxa').value = '';
@@ -56,7 +59,7 @@ window.adicionarNovoPedido = function() {
 window.finalizarEntrega = function(btn, valor, markerId) {
     totalGanhos += valor;
     
-    // ATENÇÃO: O ID aqui deve ser o que está dentro da sua .value no CSS
+    // Atualiza o painel de ganhos estilo 99 que você montou
     const displayGanhos = document.getElementById('valor-total');
     if(displayGanhos) {
         displayGanhos.innerText = `R$ ${totalGanhos.toFixed(2).replace('.', ',')}`;
