@@ -3,52 +3,72 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Foody Delivery Tracker | Scooby Dog</title>
+    <title>Painel do Entregador | Scooby Dog</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-    <link rel="stylesheet" href="style.css">
     <style>
-        /* Estilo da barra de ganhos flutuante (estilo 99) */
-        .earnings-panel {
+        body { margin: 0; font-family: 'Arial', sans-serif; background: #f4f7f6; }
+        #map { height: 100vh; width: 100vw; position: fixed; z-index: 0; }
+
+        /* Widget de Ganhos idêntico ao que você quer */
+        .ganhos-entregador {
             position: absolute;
-            top: 85px; /* Abaixo da barra de entrada */
+            top: 20px;
             left: 50%;
             transform: translateX(-50%);
-            z-index: 1001;
+            z-index: 1000;
             background: #1e2124;
             color: #00bcd4;
-            padding: 8px 20px;
-            border-radius: 20px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
-            font-weight: bold;
+            padding: 10px 25px;
+            border-radius: 30px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.4);
             display: flex;
             align-items: center;
-            gap: 10px;
+            gap: 12px;
+            font-weight: bold;
+        }
+
+        /* Status de Rastreamento Ativo */
+        .status-tracker {
+            position: absolute;
+            bottom: 30px;
+            left: 20px;
+            right: 20px;
+            z-index: 1000;
+            background: white;
+            padding: 20px;
+            border-radius: 15px;
+            text-align: center;
+            box-shadow: 0 -5px 20px rgba(0,0,0,0.1);
         }
     </style>
 </head>
 <body>
 
-    <div id="map" style="height: 100vh; width: 100vw; position: fixed; top: 0; left: 0; z-index: 0;"></div>
+    <div id="map"></div>
 
-    <div class="top-bar" style="position: absolute; top: 20px; left: 20px; right: 20px; z-index: 1000; display: flex; gap: 10px; background: rgba(255,255,255,0.95); padding: 15px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.2);">
-        <input type="text" id="pedido-id" placeholder="N° do Pedido" style="width: 100px; padding: 10px; border: 1px solid #ddd; border-radius: 8px;">
-        <input type="text" id="pedido-endereco" placeholder="Rua Visconde de Nácar, 1440..." style="flex: 1; padding: 10px; border: 1px solid #ddd; border-radius: 8px;"> <input type="text" id="pedido-taxa" placeholder="Taxa (ex: 8.80)" style="width: 100px; padding: 10px; border: 1px solid #ddd; border-radius: 8px;">
-        <button onclick="adicionarNovoPedido()" style="background: #007bff; color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-weight: bold;">Adicionar</button>
-    </div>
-
-    <div class="earnings-panel">
+    <div class="ganhos-entregador">
         <span style="color: #eee; font-size: 12px;">GANHOS DO DIA</span>
-        <span id="valor-total">R$ 0,00</span>
+        <span id="valor-total-entregador">R$ 0,00</span>
     </div>
 
-    <div class="left-panel" style="position: absolute; top: 140px; left: 20px; width: 300px; z-index: 1000; background: rgba(255,255,255,0.9); padding: 15px; border-radius: 12px; max-height: 60vh; overflow-y: auto; box-shadow: 0 4px 15px rgba(0,0,0,0.2);">
-        <h3 style="margin-top: 0; color: #333; font-size: 16px; border-bottom: 2px solid #00bcd4; padding-bottom: 5px;">Entregas em Andamento</h3>
-        
-        <div id="lista-pedidos">
-            </div>
+    <div class="status-tracker">
+        <h2 style="margin: 0 0 10px 0;">Rastreamento Ativo</h2>
+        <p style="color: #666; margin: 5px 0;">Olá, Ana! Sua posição está sendo enviada para a hamburgueria.</p>
+        <div style="color: #2ed573; font-weight: bold; display: flex; align-items: center; justify-content: center; gap: 5px;">
+            <span style="font-size: 18px;">📡</span> GPS Conectado
+        </div>
     </div>
 
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-    <script src="app.js"></script>
+    <script>
+        // Inicialização simples para o entregador
+        const map = L.map('map', { zoomControl: false }).setView([-25.4614, -49.2275], 15);
+        L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png').addTo(map);
+
+        // Simulação de atualização de ganhos
+        function atualizarGanhos(valor) {
+            document.getElementById('valor-total-entregador').innerText = `R$ ${valor.toFixed(2).replace('.', ',')}`;
+        }
+    </script>
 </body>
 </html>
