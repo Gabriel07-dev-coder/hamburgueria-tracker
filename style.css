@@ -1,52 +1,30 @@
-/* Estilo Profissional - Foody Delivery */
+/* Estilo flutuante padrão 99/Uber */
 :root {
-    --primary: #ff4757; /* Vermelho moderno como o do exemplo */
-    --secondary: #2f3542;
-    --bg-light: #f1f2f6;
-    --shadow: 0 4px 12px rgba(0,0,0,0.1);
+    --bg-dark-panel: #1e2124;
+    --accent-blue: #00bcd4;
 }
 
-body, html { margin: 0; font-family: 'Segoe UI', Tahoma, sans-serif; background: var(--bg-light); }
+body, html { margin: 0; padding: 0; height: 100%; font-family: sans-serif; }
 
-/* Barra Superior - Adicionar Pedidos */
-.top-nav {
-    position: fixed; top: 0; left: 0; right: 0; height: 60px;
-    background: white; display: flex; align-items: center; padding: 0 20px;
-    box-shadow: var(--shadow); z-index: 1001; gap: 15px;
+#map { height: 100vh; width: 100vw; z-index: 1; }
+
+/* Widget de Ganhos Superior */
+.earnings-card {
+    position: absolute; top: 20px; left: 50%; transform: translateX(-50%);
+    background: var(--bg-dark-panel); color: white; padding: 10px 25px;
+    border-radius: 30px; z-index: 1000; display: flex; align-items: center;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.5); border: 1px solid #333;
 }
 
-.top-nav input {
-    padding: 10px; border: 1px solid #ddd; border-radius: 6px; font-size: 14px;
+/* Painel de Pedidos Inferior */
+.bottom-sheet {
+    position: absolute; bottom: 0; left: 0; right: 0;
+    background: white; border-top-left-radius: 25px; border-top-right-radius: 25px;
+    padding: 20px; z-index: 1000; box-shadow: 0 -5px 15px rgba(0,0,0,0.2);
+    max-height: 40vh; overflow-y: auto;
 }
 
-.btn-add {
-    background: var(--primary); color: white; border: none; padding: 10px 25px;
-    border-radius: 6px; cursor: pointer; font-weight: bold; transition: 0.3s;
+.order-item {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 15px 0; border-bottom: 1px solid #eee;
 }
-
-.btn-add:hover { background: #e04050; }
-
-/* Barra Lateral - Lista de Pedidos */
-.sidebar {
-    position: fixed; top: 60px; left: 0; bottom: 0; width: 320px;
-    background: white; z-index: 1000; padding: 20px; box-shadow: 2px 0 10px rgba(0,0,0,0.05);
-    overflow-y: auto;
-}
-
-/* Itens da Lista */
-.card-pedido {
-    background: white; border: 1px solid #eee; border-radius: 10px;
-    padding: 15px; margin-bottom: 12px; transition: 0.2s;
-}
-
-.card-pedido:hover { border-color: var(--primary); transform: translateY(-2px); }
-
-.status-badge {
-    font-size: 11px; padding: 3px 8px; border-radius: 20px; 
-    text-transform: uppercase; font-weight: bold;
-}
-
-.status-active { background: #e3fcef; color: #00875a; }
-
-/* Mapa */
-#map { position: fixed; top: 60px; left: 320px; right: 0; bottom: 0; z-index: 0; }
