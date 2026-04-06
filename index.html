@@ -3,27 +3,46 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Foody Delivery Tracker</title>
+    <title>Foody Delivery Tracker | Scooby Dog</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <link rel="stylesheet" href="style.css">
+    <style>
+        /* Estilo da barra de ganhos flutuante (estilo 99) */
+        .earnings-panel {
+            position: absolute;
+            top: 85px; /* Abaixo da barra de entrada */
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 1001;
+            background: #1e2124;
+            color: #00bcd4;
+            padding: 8px 20px;
+            border-radius: 20px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+    </style>
 </head>
 <body>
 
     <div id="map" style="height: 100vh; width: 100vw; position: fixed; top: 0; left: 0; z-index: 0;"></div>
 
-    <div class="top-bar glass-sidebar" style="position: absolute; top: 20px; left: 20px; right: 20px; z-index: 1000; display: flex; gap: 10px; background: rgba(255,255,255,0.9); padding: 15px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.2);">
+    <div class="top-bar" style="position: absolute; top: 20px; left: 20px; right: 20px; z-index: 1000; display: flex; gap: 10px; background: rgba(255,255,255,0.95); padding: 15px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.2);">
         <input type="text" id="pedido-id" placeholder="N° do Pedido" style="width: 100px; padding: 10px; border: 1px solid #ddd; border-radius: 8px;">
-        <input type="text" id="pedido-endereco" placeholder="Endereço Completo (incluindo número)" style="flex: 1; padding: 10px; border: 1px solid #ddd; border-radius: 8px;">
-        <input type="text" id="pedido-taxa" placeholder="Taxa (ex: 8.80)" style="width: 100px; padding: 10px; border: 1px solid #ddd; border-radius: 8px;">
+        <input type="text" id="pedido-endereco" placeholder="Rua Visconde de Nácar, 1440..." style="flex: 1; padding: 10px; border: 1px solid #ddd; border-radius: 8px;"> <input type="text" id="pedido-taxa" placeholder="Taxa (ex: 8.80)" style="width: 100px; padding: 10px; border: 1px solid #ddd; border-radius: 8px;">
         <button onclick="adicionarNovoPedido()" style="background: #007bff; color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-weight: bold;">Adicionar</button>
     </div>
 
-    <div class="left-panel glass-sidebar" style="position: absolute; top: 100px; left: 20px; width: 300px; z-index: 1000; background: rgba(255,255,255,0.9); padding: 15px; border-radius: 12px; max-height: 70vh; overflow-y: auto; box-shadow: 0 4px 15px rgba(0,0,0,0.2);">
-        <h3 style="margin-top: 0; color: #333; font-size: 18px;">Foody Delivery</h3>
-        <div class="status-tabs" style="display: flex; gap: 5px; margin-bottom: 15px;">
-            <button style="flex: 1; padding: 8px; border-radius: 8px; border: none; background: #00ced1; color: white; cursor: pointer;">Ativos</button>
-            <button style="flex: 1; padding: 8px; border-radius: 8px; border: none; background: #eee; cursor: pointer;">Finalizados</button>
-        </div>
+    <div class="earnings-panel">
+        <span style="color: #eee; font-size: 12px;">GANHOS DO DIA</span>
+        <span id="valor-total">R$ 0,00</span>
+    </div>
+
+    <div class="left-panel" style="position: absolute; top: 140px; left: 20px; width: 300px; z-index: 1000; background: rgba(255,255,255,0.9); padding: 15px; border-radius: 12px; max-height: 60vh; overflow-y: auto; box-shadow: 0 4px 15px rgba(0,0,0,0.2);">
+        <h3 style="margin-top: 0; color: #333; font-size: 16px; border-bottom: 2px solid #00bcd4; padding-bottom: 5px;">Entregas em Andamento</h3>
         
         <div id="lista-pedidos">
             </div>
