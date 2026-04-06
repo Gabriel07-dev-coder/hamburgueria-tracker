@@ -1,101 +1,52 @@
-/* Layout base */
-body { margin: 0; padding: 0; overflow: hidden; font-family: sans-serif; background: #fff; }
-
-#map { 
-    height: 100vh; 
-    width: 100vw; 
-    position: fixed; 
-    top: 0; 
-    left: 0; 
-    z-index: 0; /* Mapa sempre no fundo */
+/* Estilo Profissional - Foody Delivery */
+:root {
+    --primary: #ff4757; /* Vermelho moderno como o do exemplo */
+    --secondary: #2f3542;
+    --bg-light: #f1f2f6;
+    --shadow: 0 4px 12px rgba(0,0,0,0.1);
 }
 
-/* Painel de Vidro (melhorado) */
-.glass-sidebar {
-    background: rgba(255, 255, 255, 0.9);
-    backdrop-filter: blur(10px);
-    border-radius: 12px;
-    padding: 15px;
-    position: absolute;
-    z-index: 10;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-    border: 1px solid rgba(0,0,0,0.05);
+body, html { margin: 0; font-family: 'Segoe UI', Tahoma, sans-serif; background: var(--bg-light); }
+
+/* Barra Superior - Adicionar Pedidos */
+.top-nav {
+    position: fixed; top: 0; left: 0; right: 0; height: 60px;
+    background: white; display: flex; align-items: center; padding: 0 20px;
+    box-shadow: var(--shadow); z-index: 1001; gap: 15px;
 }
 
-/* BARRA SUPERIOR */
-.top-bar {
-    top: 20px;
-    left: 20px;
-    right: 20px;
-    display: flex;
-    gap: 10px;
-    align-items: center;
+.top-nav input {
+    padding: 10px; border: 1px solid #ddd; border-radius: 6px; font-size: 14px;
 }
 
-.top-bar input {
-    flex: 1;
-    padding: 10px;
-    border: 1px solid #ddd;
-    border-radius: 8px;
-    font-size: 14px;
+.btn-add {
+    background: var(--primary); color: white; border: none; padding: 10px 25px;
+    border-radius: 6px; cursor: pointer; font-weight: bold; transition: 0.3s;
 }
 
-.top-bar button {
-    background: #007bff;
-    color: white;
-    border: none;
-    padding: 10px 20px;
-    border-radius: 8px;
-    cursor: pointer;
+.btn-add:hover { background: #e04050; }
+
+/* Barra Lateral - Lista de Pedidos */
+.sidebar {
+    position: fixed; top: 60px; left: 0; bottom: 0; width: 320px;
+    background: white; z-index: 1000; padding: 20px; box-shadow: 2px 0 10px rgba(0,0,0,0.05);
+    overflow-y: auto;
 }
 
-/* PAINEL LATERAL ESQUERDO */
-.left-panel {
-    top: 80px;
-    left: 20px;
-    width: 280px;
-    max-height: calc(100vh - 120px);
-    display: flex;
-    flex-direction: column;
+/* Itens da Lista */
+.card-pedido {
+    background: white; border: 1px solid #eee; border-radius: 10px;
+    padding: 15px; margin-bottom: 12px; transition: 0.2s;
 }
 
-.left-panel .panel-header {
-    text-align: left;
-    margin: 0 0 15px;
-    color: #333;
-    font-size: 18px;
+.card-pedido:hover { border-color: var(--primary); transform: translateY(-2px); }
+
+.status-badge {
+    font-size: 11px; padding: 3px 8px; border-radius: 20px; 
+    text-transform: uppercase; font-weight: bold;
 }
 
-.status-buttons { display: flex; gap: 5px; margin-bottom: 15px; }
-.status-btn {
-    flex: 1;
-    background: #f0f0f0;
-    border: 1px solid #ddd;
-    padding: 8px;
-    border-radius: 8px;
-    cursor: pointer;
-    font-size: 13px;
-}
-.status-btn.active { background: #00ced1; color: white; border-color: #00ced1; }
+.status-active { background: #e3fcef; color: #00875a; }
 
-.pedidos-container { overflow-y: auto; display: flex; flex-direction: column; gap: 8px; }
-
-/* Itens de Pedido Estilizados */
-.pedido-item {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    background: #f9f9f9;
-    padding: 10px;
-    border-radius: 8px;
-    border: 1px solid #eee;
-}
-
-.dot { width: 12px; height: 12px; border-radius: 50%; } /* Cor do status */
-.dot.green { background: #28a745; }
-.dot.blue { background: #007bff; }
-.dot.red { background: #dc3545; }
-
-.pedido-id { font-weight: bold; color: #333; }
-.pedido-rua { flex: 1; color: #666; font-size: 12px; }
-.taxa { color: #888; font-size: 11px; }
+/* Mapa */
+#map { position: fixed; top: 60px; left: 320px; right: 0; bottom: 0; z-index: 0; }
