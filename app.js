@@ -1,25 +1,61 @@
 let map;
+let userMarker;
 let totalGanhos = 0;
-
-// Corrigido para Visconde de Nácar, 1440 - Onde você realmente está testando
-const baseCoords = [-25.4351, -49.2786]; 
 
 function inicializarMapa() {
     if (map !== undefined) {
         map.remove();
     }
 
-    // Zoom 16 para detalhamento urbano do Centro de Curitiba
-    map = L.map('map', { zoomControl: false }).setView(baseCoords, 16);
+    // Inicializa o mapa com zoom focado para navegação urbana
+    map = L.map('map', { zoomControl: false }).setView([-25.4351, -49.2786], 16);
 
-    // Tema Dark que você escolheu para o app do entregador
+    // Tema Dark estilo "99/Uber" que você validou nos prints
     L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png').addTo(map);
 
-    L.circleMarker(baseCoords, {
-        radius: 10, fillColor: "#ff4757", color: "white", weight: 3, fillOpacity: 1
-    }).addTo(map).bindPopup("<b>Scooby Dog</b><br>Centro");
+    // Ativa o rastreamento em tempo real
+    configurarRastreamento();
 }
 
+function configurarRastreamento() {
+    if (!navigator.geolocation) {
+        return alert("Seu navegador não suporta geolocalização.");
+    }
+
+    // Função que observa a mudança de posição
+    navigator.geolocation.watchPosition(
+        (pos) => {
+            const { latitude, longitude } = pos.coords;
+            const novaPos = [latitude, longitude];
+
+            // Se o marcador do entregador não existir, cria. Se existir, move.
+            if (!userMarker) {
+                userMarker = L.circleMarker(novaPos, {
+                    radius: 10,
+                    fillColor: "#00bcd4", // Azul do seu painel de ganhos
+                    color: "white",
+                    weight: 3,
+                    fillOpacity: 1
+                }).addTo(map).bindPopup("Você está aqui");
+            } else {
+                userMarker.setLatLng(novaPos);
+            }
+
+            // Centraliza o mapa na sua posição atual
+            map.panTo(novaPos);
+        },
+        (err) => {
+            console.error("Erro ao rastrear: ", err);
+        },
+        {
+            enableHighAccuracy: true, // Usa o GPS do celular para maior precisão
+            maximumAge: 0,
+            timeout: 5000
+        }
+    );
+}
+
+// Mantenha suas funções de adicionar e finalizar pedidos abaixo
 window.adicionarNovoPedido = function() {
     const id = document.getElementById('pedido-id').value;
     const endereco = document.getElementById('pedido-endereco').value;
@@ -27,17 +63,18 @@ window.adicionarNovoPedido = function() {
 
     if (!id || !endereco) return alert("Preencha os campos!");
 
-    // Fator de dispersão menor para os pedidos não caírem no meio do mato
-    const lat = baseCoords[0] + (Math.random() - 0.5) * 0.006;
-    const lng = baseCoords[1] + (Math.random() - 0.5) * 0.006;
+    // Gera o marcador de entrega perto da sua posição atual
+    const center = userMarker ? userMarker.getLatLng() : map.getCenter();
+    const lat = center.lat + (Math.random() - 0.5) * 0.005;
+    const lng = center.lng + (Math.random() - 0.5) * 0.005;
 
     const marker = L.circleMarker([lat, lng], {
-        radius: 8, fillColor: "#00bcd4", color: "white", weight: 2, fillOpacity: 1
+        radius: 8, fillColor: "#ff4757", color: "white", weight: 2, fillOpacity: 1
     }).addTo(map);
 
     const lista = document.getElementById('lista-pedidos');
     const card = document.createElement('div');
-    card.className = 'order-item'; // Classe do seu CSS atualizado
+    card.className = 'order-item'; 
     card.innerHTML = `
         <div class="order-info">
             <span class="order-number">#${id}</span>
@@ -50,7 +87,6 @@ window.adicionarNovoPedido = function() {
     `;
     lista.prepend(card);
     
-    // Limpeza automática para você não perder tempo
     document.getElementById('pedido-id').value = '';
     document.getElementById('pedido-endereco').value = '';
     document.getElementById('pedido-taxa').value = '';
@@ -58,13 +94,10 @@ window.adicionarNovoPedido = function() {
 
 window.finalizarEntrega = function(btn, valor, markerId) {
     totalGanhos += valor;
-    
-    // Atualiza o painel de ganhos estilo 99 que você montou
     const displayGanhos = document.getElementById('valor-total');
     if(displayGanhos) {
         displayGanhos.innerText = `R$ ${totalGanhos.toFixed(2).replace('.', ',')}`;
     }
-    
     btn.closest('.order-item').remove();
     map.eachLayer((layer) => {
         if (layer._leaflet_id === markerId) map.removeLayer(layer);
