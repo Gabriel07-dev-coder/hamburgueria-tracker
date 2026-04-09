@@ -5,32 +5,25 @@ let map;
 let markerEntregador;
 
 function inicializarMapaEmpresa() {
-    // Inicializa o mapa focado no Centro de Curitiba
+    // Inicializa o mapa limpo, sem marcadores na praça
     map = L.map('map', { zoomControl: false }).setView([-25.4351, -49.2786], 15);
-    
-    // Tema Dark que você definiu para o projeto
     L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png').addTo(map);
 
-    // ESCUTA O GPS: O ponto só aparece quando houver sinal vindo do Firebase
+    // Escuta a localização REAL do entregador no Firestore
     onSnapshot(doc(db, "rastreio", "entregador_1"), (doc) => {
         const data = doc.data();
         if (data) {
             const novaPos = [data.lat, data.lng];
 
             if (!markerEntregador) {
-                // Cria o marcador na posição REAL (sem nomes ou textos fixos)
+                // Cria o marcador móvel apenas quando o sinal chega (sem nomes fixos)
                 markerEntregador = L.circleMarker(novaPos, {
-                    radius: 10, 
-                    fillColor: "#00bcd4", 
-                    color: "white", 
-                    weight: 3, 
-                    fillOpacity: 1
+                    radius: 10, fillColor: "#00bcd4", color: "white", weight: 3, fillOpacity: 1
                 }).addTo(map);
             } else {
                 markerEntregador.setLatLng(novaPos);
             }
-            // Segue o movimento automaticamente
-            map.panTo(novaPos);
+            map.panTo(novaPos); // O mapa segue você em tempo real
         }
     });
 }
