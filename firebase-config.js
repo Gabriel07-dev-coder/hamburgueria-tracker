@@ -1,19 +1,16 @@
-import { db } from './firebase-config.js';
-import { doc, setDoc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
+import { getFirestore } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
 
-// Rastreamento em tempo real do entregador
-navigator.geolocation.watchPosition(async (pos) => {
-    const latLng = {
-        lat: pos.coords.latitude,
-        lng: pos.coords.longitude,
-        timestamp: new Date().getTime()
-    };
+const firebaseConfig = {
+    apiKey: "AIzaSyCxSHASI8Ve9evqhKfd-bnTfXagqLIunM",
+    authDomain: "hamburgueria-tracker.firebaseapp.com",
+    projectId: "hamburgueria-tracker",
+    storageBucket: "hamburgueria-tracker.firebasestorage.app",
+    messagingSenderId: "1070466497328",
+    appId: "1:1070466497328:web:74132bd089e63817aea6f5",
+    measurementId: "G-JQYBOEBT4T"
+};
 
-    try {
-        // Salva a posição no documento 'entregador_1'
-        await setDoc(doc(db, "rastreio", "entregador_1"), latLng);
-        console.log("Posição enviada!");
-    } catch (e) {
-        console.error("Erro ao enviar: ", e);
-    }
-}, null, { enableHighAccuracy: true });
+const app = initializeApp(firebaseConfig);
+// ADICIONE O 'export' AQUI EMBAIXO:
+export const db = getFirestore(app);
