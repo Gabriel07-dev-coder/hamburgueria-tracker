@@ -12,5 +12,4 @@ const firebaseConfig = {
 };
 
 const app = initializeApp(firebaseConfig);
-// A LINHA QUE VOCÊ ESQUECEU:
-export const db = getFirestore(app);
+export const db = getFirestore(app); // EXPORTAÇÃO CORRIGIDA
