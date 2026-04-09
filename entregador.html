@@ -3,14 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Entregador | Scooby Dog</title>
+    <title>Rastreador | Entregador</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <style>
         :root { --bg-panel: #1e2124; --accent: #00bcd4; }
         body { margin: 0; font-family: sans-serif; overflow: hidden; background: #000; }
         #map { height: 100vh; width: 100vw; z-index: 1; }
 
-        /* Widget de Ganhos Superior */
         .earnings-card {
             position: absolute; top: 20px; left: 50%; transform: translateX(-50%);
             background: var(--bg-panel); color: white; padding: 10px 25px;
@@ -19,7 +18,6 @@
         }
         .earnings-card .value { color: var(--accent); font-weight: 800; font-size: 18px; }
 
-        /* Painel de Status Inferior */
         .status-bottom {
             position: absolute; bottom: 20px; left: 15px; right: 15px;
             background: white; border-radius: 20px; padding: 25px;
@@ -38,14 +36,57 @@
 
     <div class="status-bottom">
         <h2 style="margin: 0;">Rastreamento Ativo</h2>
-        <p style="color: #666; font-size: 14px;">Olá, Sua posição está sendo enviada.</p>
-        <div class="gps-status">📡 GPS Conectado</div>
+        <p style="color: #666; font-size: 14px;">Sua posição real está sendo enviada para o sistema.</p>
+        <div class="gps-status" id="status-texto">📡 GPS Conectado</div>
     </div>
 
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-    <script>
-        const map = L.map('map', { zoomControl: false }).setView([-25.4614, -49.2275], 15);
+    
+    <script type="module">
+        import { db } from './firebase-config.js';
+        import { doc, setDoc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+
+        // Inicializa o mapa limpo no Centro
+        const map = L.map('map', { zoomControl: false }).setView([-25.4351, -49.2786], 16);
         L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png').addTo(map);
+
+        let userMarker;
+
+        // Função para atualizar a posição real e enviar ao Firebase
+        function rastrear() {
+            if (!navigator.geolocation) return alert("GPS não suportado");
+
+            navigator.geolocation.watchPosition(async (pos) => {
+                const { latitude, longitude } = pos.coords;
+                const latLng = [latitude, longitude];
+
+                // Atualiza o mapa local
+                if (!userMarker) {
+                    userMarker = L.circleMarker(latLng, {
+                        radius: 10, fillColor: "#00bcd4", color: "white", weight: 3, fillOpacity: 1
+                    }).addTo(map);
+                } else {
+                    userMarker.setLatLng(latLng);
+                }
+                map.panTo(latLng);
+
+                // Envia para o Firestore (Esqueça o Scooby Dog, isso é dado puro)
+                try {
+                    await setDoc(doc(db, "rastreio", "entregador_1"), {
+                        lat: latitude,
+                        lng: longitude,
+                        timestamp: new Date().getTime()
+                    });
+                } catch (e) {
+                    console.error("Erro ao sincronizar posição:", e);
+                }
+            }, (err) => {
+                document.getElementById('status-texto').innerText = "❌ Erro no GPS";
+                document.getElementById('status-texto').style.color = "red";
+            }, { enableHighAccuracy: true });
+        }
+
+        rastrear();
     </script>
 </body>
 </html>
