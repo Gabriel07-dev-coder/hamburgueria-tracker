@@ -4,24 +4,24 @@ import { doc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.8.1/fireb
 let map;
 let markerEntregador;
 
-function inicializarPainelRastreio() {
-    // Inicializa o mapa focado no Centro, mas SEM nenhum marcador
+function inicializarMapaEmpresa() {
+    // Inicializa o mapa focado no Centro de Curitiba
     map = L.map('map', { zoomControl: false }).setView([-25.4351, -49.2786], 15);
     
-    // Tema escuro para o seu estilo de rastreador
+    // Tema Dark que você definiu para o projeto
     L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png').addTo(map);
 
-    // ESCUTA O FIREBASE: O marcador só aparece quando você ligar o GPS no celular
+    // ESCUTA O GPS: O ponto só aparece quando houver sinal vindo do Firebase
     onSnapshot(doc(db, "rastreio", "entregador_1"), (doc) => {
         const data = doc.data();
         if (data) {
             const novaPos = [data.lat, data.lng];
 
             if (!markerEntregador) {
-                // Cria apenas o marcador da posição real, sem popup ou nomes
+                // Cria o marcador na posição REAL (sem nomes ou textos fixos)
                 markerEntregador = L.circleMarker(novaPos, {
                     radius: 10, 
-                    fillColor: "#00bcd4", // O azul que você já usa
+                    fillColor: "#00bcd4", 
                     color: "white", 
                     weight: 3, 
                     fillOpacity: 1
@@ -29,10 +29,10 @@ function inicializarPainelRastreio() {
             } else {
                 markerEntregador.setLatLng(novaPos);
             }
-            // Segue o movimento em tempo real
+            // Segue o movimento automaticamente
             map.panTo(novaPos);
         }
     });
 }
 
-inicializarPainelRastreio();
+inicializarMapaEmpresa();
