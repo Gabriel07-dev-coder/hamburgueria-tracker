@@ -2,12 +2,11 @@
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <title>Painel de Gestão e Rastreio</title> <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <title>Painel de Gestão e Rastreio</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <style>
-        body { margin: 0; font-family: sans-serif; }
+        body { margin: 0; font-family: sans-serif; background: #121212; }
         #map { height: 100vh; width: 100vw; position: fixed; }
-
-        /* Barra de Cadastro Superior */
         .admin-bar {
             position: absolute; top: 15px; left: 15px; right: 15px; z-index: 1000;
             background: white; padding: 12px; border-radius: 10px;
@@ -15,8 +14,6 @@
         }
         .admin-bar input { padding: 10px; border: 1px solid #ddd; border-radius: 6px; }
         .btn-add { background: #007bff; color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; }
-
-        /* Lista Lateral de Pedidos Ativos */
         .side-panel {
             position: absolute; top: 90px; left: 15px; width: 300px; z-index: 1000;
             background: rgba(255,255,255,0.95); border-radius: 12px; padding: 15px;
@@ -26,21 +23,17 @@
 </head>
 <body>
     <div id="map"></div>
-
     <div class="admin-bar">
         <input type="text" id="p-id" placeholder="N°" style="width: 50px;">
         <input type="text" id="p-end" placeholder="Endereço..." style="flex: 1;">
         <input type="text" id="p-taxa" placeholder="Taxa" style="width: 80px;">
         <button class="btn-add">Adicionar</button>
     </div>
-
     <div class="side-panel">
         <h3 style="margin-top: 0; border-bottom: 2px solid #00bcd4;">Entregas Ativas</h3>
         <div id="lista-pedidos"></div>
     </div>
-
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-    
     <script type="module" src="app.js"></script> 
 </body>
 </html>
