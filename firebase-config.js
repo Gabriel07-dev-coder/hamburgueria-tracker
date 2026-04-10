@@ -3,7 +3,7 @@ import { getFirestore } from "https://www.gstatic.com/firebasejs/10.8.1/firebase
 import { getAuth } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
 
 const firebaseConfig = {
-    apiKey: "AIzaSyCxSHASI8Ve9evqhKfd-bnTfXagqLIunM", // Suas chaves reais aqui
+    apiKey: "AIzaSyCxSHASI8Ve9evqhKfd-bnTfXagqLIunM",
     authDomain: "hamburgueria-tracker.firebaseapp.com",
     projectId: "hamburgueria-tracker",
     storageBucket: "hamburgueria-tracker.firebasestorage.app",
