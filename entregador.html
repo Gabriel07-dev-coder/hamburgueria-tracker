@@ -3,76 +3,98 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Rastreador | Modo Entregador</title>
+    <title>App Entregador | Hamburgueria</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <style>
-        :root { --bg-dark: #121212; --accent: #00bcd4; }
-        body { margin: 0; font-family: sans-serif; background: var(--bg-dark); color: white; overflow: hidden; }
+        :root { --bg: #121212; --card: #1e1e1e; --accent: #00bcd4; --text: #ffffff; }
+        body { margin: 0; font-family: 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); overflow: hidden; }
+        
+        /* Mapa ocupa o fundo todo */
         #map { height: 100vh; width: 100vw; z-index: 1; }
-        .status-card {
-            position: absolute; bottom: 20px; left: 15px; right: 15px;
-            background: white; border-radius: 20px; padding: 20px;
-            z-index: 1000; text-align: center; color: #333;
-            box-shadow: 0 -5px 15px rgba(0,0,0,0.3);
+
+        /* Interface Estilo App */
+        .app-overlay {
+            position: absolute; bottom: 0; left: 0; right: 0;
+            background: var(--card); border-top-left-radius: 25px; border-top-right-radius: 25px;
+            padding: 20px; z-index: 1000; box-shadow: 0 -5px 20px rgba(0,0,0,0.5);
+            text-align: center;
         }
-        .gps-active { color: #2ed573; font-weight: bold; }
+
+        .status-badge {
+            display: inline-block; padding: 5px 15px; border-radius: 20px;
+            font-size: 12px; font-weight: bold; background: #333; margin-bottom: 10px;
+        }
+
+        .online { color: #2ed573; border: 1px solid #2ed573; }
+
+        h2 { margin: 10px 0; font-size: 20px; }
+        p { color: #aaa; font-size: 14px; margin-bottom: 20px; }
+
+        .btn-action {
+            width: 100%; padding: 15px; border-radius: 12px; border: none;
+            font-weight: bold; font-size: 16px; cursor: pointer; transition: 0.3s;
+            background: var(--accent); color: white;
+        }
+
+        .btn-action:active { transform: scale(0.98); }
     </style>
 </head>
 <body>
+
     <div id="map"></div>
 
-    <div class="status-card">
-        <h3 style="margin: 0;">Rastreamento em Tempo Real</h3>
-        <p style="font-size: 14px; color: #666;">Sua posição está sendo enviada para a central.</p>
-        <div id="status-gps" class="gps-active">📡 Aguardando GPS...</div>
+    <div class="app-overlay">
+        <div class="status-badge online" id="status-label">📡 AGUARDANDO GPS</div>
+        <h2 id="cliente-nome">Procurando Pedidos...</h2>
+        <p id="endereco-texto">Sua localização será enviada à central.</p>
+        <button class="btn-action" onclick="focarNoMapa()">CENTRALIZAR GPS</button>
     </div>
 
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-    <script type="module">
-        import { db } from './firebase-config.js'; // O arquivo com o seu 'export' corrigido
-        import { doc, setDoc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
 
-        const map = L.map('map', { zoomControl: false }).setView([-25.4351, -49.2786], 16);
+    <script type="module">
+        // Importa a conexão que você configurou no firebase-config.js
+        import { db } from './firebase-config.js';
+        import { doc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+
+        // Inicializa o mapa com estilo Dark (99/Uber)
+        const map = L.map('map', { zoomControl: false }).setView([-25.4351, -49.2786], 15);
         L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png').addTo(map);
 
-        let markerEntregador;
+        let userMarker;
+        let currentPos = null;
 
-        function iniciarRastreio() {
-            if (!navigator.geolocation) return alert("GPS não suportado pelo seu navegador.");
+        // 1. ESCUTA O FIREBASE: Ver se a empresa mandou um pedido
+        // Substituiremos "entregador_1" pelo seu ID de login depois
+        onSnapshot(doc(db, "rastreio", "entregador_1"), (docSnap) => {
+            const data = docSnap.data();
+            if (data && data.enderecoDestino) {
+                document.getElementById('cliente-nome').innerText = "Novo Pedido!";
+                document.getElementById('endereco-texto').innerText = data.enderecoDestino;
+            }
+        });
 
-            // watchPosition é o que faz o rastreio ser real e contínuo
+        // 2. RASTREIO GPS REAL
+        function iniciarRastreamento() {
+            if (!navigator.geolocation) {
+                alert("Seu celular não suporta GPS.");
+                return;
+            }
+
             navigator.geolocation.watchPosition(async (pos) => {
                 const { latitude, longitude } = pos.coords;
-                const latLng = [latitude, longitude];
+                currentPos = [latitude, longitude];
 
-                // Atualiza o mapa no celular do entregador
-                if (!markerEntregador) {
-                    markerEntregador = L.circleMarker(latLng, {
-                        radius: 12, fillColor: "#00bcd4", color: "white", weight: 3, fillOpacity: 1
+                // Atualiza marcador no mapa do celular
+                if (!userMarker) {
+                    userMarker = L.circleMarker(currentPos, {
+                        radius: 10, fillColor: "#00bcd4", color: "#fff", weight: 3, fillOpacity: 1
                     }).addTo(map);
                 } else {
-                    markerEntregador.setLatLng(latLng);
+                    userMarker.setLatLng(currentPos);
                 }
-                map.panTo(latLng);
+                
+                map.panTo(currentPos);
+                document.getElementById('status-label').innerText = "📡 LOCALIZAÇÃO ATIVA";
 
-                // ATUALIZA O FIREBASE - Isso é o que aparece no painel da empresa!
-                try {
-                    await setDoc(doc(db, "rastreio", "entregador_1"), {
-                        lat: latitude,
-                        lng: longitude,
-                        timestamp: Date.now()
-                    });
-                    document.getElementById('status-gps').innerText = "📡 Localização Sincronizada";
-                } catch (e) {
-                    console.error("Erro ao enviar dados:", e);
-                }
-            }, (err) => {
-                console.error(err);
-                document.getElementById('status-gps').innerText = "❌ Erro ao acessar GPS";
-            }, { enableHighAccuracy: true });
-        }
-
-        iniciarRastreio();
-    </script>
-</body>
-</html>
+                // ENVIA PARA A EMPRESA [cite: image_b8e48
