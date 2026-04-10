@@ -3,60 +3,36 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>App Entregador</title>
+    <title>GPS Entregador</title>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-    <style>
-        body { margin: 0; background: #121212; color: white; font-family: sans-serif; }
-        #map { height: 100vh; width: 100vw; z-index: 1; }
-        .overlay {
-            position: absolute; bottom: 0; left: 0; right: 0; z-index: 1000;
-            background: #1e1e1e; padding: 25px; border-radius: 25px 25px 0 0; text-align: center;
-        }
-        .btn { background: #00bcd4; border: none; padding: 15px; width: 100%; border-radius: 12px; color: white; font-weight: bold; font-size: 16px; }
-        .status { color: #2ed573; font-weight: bold; margin-bottom: 10px; display: block; }
-    </style>
+    <style>body { margin: 0; background: #000; } #map { height: 100vh; }</style>
 </head>
 <body>
     <div id="map"></div>
-    <div class="overlay">
-        <span class="status" id="st">🛰️ BUSCANDO GPS...</span>
-        <h3 id="dest-title">Nenhum pedido ativo</h3>
-        <p id="dest-addr" style="color: #aaa; font-size: 14px;">Aguarde novas ordens da central.</p>
-        <button class="btn" onclick="location.reload()">ATUALIZAR APP</button>
-    </div>
-
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script type="module">
         import { db } from './firebase-config.js';
-        import { doc, onSnapshot, setDoc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+        import { doc, setDoc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
 
-        const map = L.map('map', { zoomControl: false }).setView([-25.4351, -49.2786], 15);
+        const map = L.map('map').setView([-25.4351, -49.2786], 15);
         L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png').addTo(map);
+        let marker;
 
-        let userMarker, destMarker;
-
-        // Ouvir ordens da empresa
-        onSnapshot(doc(db, "rastreio", "entregador_1"), (snap) => {
-            const data = snap.data();
-            if (data && data.destinoLat) {
-                document.getElementById('dest-title').innerText = "ENTREGA ATIVA!";
-                document.getElementById('dest-addr').innerText = data.enderecoDestino;
-                if (destMarker) destMarker.setLatLng([data.destinoLat, data.destinoLng]);
-                else destMarker = L.marker([data.destinoLat, data.destinoLng]).addTo(map).bindPopup("ENTREGA AQUI").openPopup();
-            }
-        });
-
-        // Enviar Localização Real
         navigator.geolocation.watchPosition(async (pos) => {
-            const latLng = [pos.coords.latitude, pos.coords.longitude];
-            if (userMarker) userMarker.setLatLng(latLng);
-            else userMarker = L.circleMarker(latLng, { radius: 10, fillColor: "#00bcd4", color: "#fff", weight: 3, fillOpacity: 1 }).addTo(map);
-            
-            map.panTo(latLng);
-            document.getElementById('st').innerText = "📡 GPS SINCRONIZADO";
+            const { latitude, longitude } = pos.coords;
+            const latLng = [latitude, longitude];
 
-            await setDoc(doc(db, "rastreio", "entregador_1"), {
-                lat: pos.coords.latitude, lng: pos.coords.longitude, timestamp: Date.now()
+            if (!marker) marker = L.circleMarker(latLng, { radius: 10, color: '#00bcd4' }).addTo(map);
+            else marker.setLatLng(latLng);
+            map.panTo(latLng);
+
+            // Grava na coleção 'entregadores'
+            await setDoc(doc(db, "entregadores", "entregador_1"), {
+                nome: "João Gabriel",
+                lat: latitude,
+                lng: longitude,
+                status: "online",
+                lastUpdate: Date.now()
             }, { merge: true });
         }, null, { enableHighAccuracy: true });
     </script>
