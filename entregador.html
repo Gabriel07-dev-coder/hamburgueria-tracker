@@ -37,7 +37,7 @@
             document.getElementById('info').innerText = "📡 GPS CONECTADO";
 
             await setDoc(doc(db, "entregadores", "entregador_1"), {
-                nome: "João Gabriel", lat: pos.coords.latitude, lng: pos.coords.longitude, status: "online"
+                nome: "Entregador Disponível ", lat: pos.coords.latitude, lng: pos.coords.longitude, status: "online"
             }, { merge: true });
         }, null, { enableHighAccuracy: true });
     </script>
