@@ -2,12 +2,35 @@
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <title>Monitoramento em Tempo Real</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Foody Delivery | Admin Dashboard</title>
+    <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-    <style>#map { height: 100vh; width: 100vw; }</style>
 </head>
 <body>
-    <div id="map"></div>
+    <header class="main-header">
+        <div class="logo">FOODY<span>Admin</span></div>
+        <div class="dispatch-bar">
+            <input type="text" id="p-id" placeholder="Nº">
+            <input type="text" id="p-end" placeholder="Endereço de entrega...">
+            <input type="text" id="p-taxa" placeholder="Taxa R$">
+            <button id="btn-despachar">DESPACHAR AGORA</button>
+        </div>
+    </header>
+
+    <main class="dashboard-container">
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <h3>Entregas Ativas</h3>
+                <span id="contador-pedidos">0</span>
+            </div>
+            <div id="lista-pedidos" class="scroll-custom">
+                </div>
+        </aside>
+
+        <section id="map"></section>
+    </main>
+
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script type="module" src="app.js"></script>
 </body>
