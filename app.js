@@ -1,77 +1,63 @@
 import { db } from './firebase-config.js';
-import { collection, onSnapshot, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+import { collection, onSnapshot, addDoc, doc, deleteDoc, updateDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
 
-// Configurações do Mapa
 const map = L.map('map', { zoomControl: false }).setView([-25.4351, -49.2786], 13);
 L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png').addTo(map);
 
-const layers = { pedidos: {}, entregadores: {} };
+const markers = { pedidos: {}, entregadores: {} };
 
-// --- FUNÇÃO: DESPACHAR PEDIDO ---
-async function despacharPedido() {
+// 1. Monitorar Entregadores
+onSnapshot(collection(db, "entregadores"), (snap) => {
+    snap.docChanges().forEach(change => {
+        const data = change.doc.data();
+        const id = change.doc.id;
+        if (markers.entregadores[id]) markers.entregadores[id].setLatLng([data.lat, data.lng]);
+        else {
+            markers.entregadores[id] = L.circleMarker([data.lat, data.lng], { radius: 8, color: '#00bcd4' }).addTo(map).bindTooltip(data.nome);
+        }
+    });
+});
+
+// 2. Despachar Pedido com Geocoding
+document.getElementById('btn-add').onclick = async () => {
     const end = document.getElementById('p-end').value;
-    const id = document.getElementById('p-id').value;
-    
-    if(!end) return alert("Endereço obrigatório!");
-
-    // Geocoding Gratuito (Nominatim)
     const resp = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(end + ", Curitiba")}`);
-    const data = await resp.json();
+    const geo = await resp.json();
 
-    if(data.length > 0) {
+    if (geo.length > 0) {
         await addDoc(collection(db, "pedidos"), {
-            numero: id,
+            numero: document.getElementById('p-id').value,
             endereco: end,
-            lat: parseFloat(data[0].lat),
-            lng: parseFloat(data[0].lon),
-            status: "pendente",
-            criadoEm: serverTimestamp()
+            taxa: document.getElementById('p-taxa').value,
+            lat: parseFloat(geo[0].lat), lng: parseFloat(geo[0].lon),
+            status: "pendente", criadoEm: serverTimestamp()
         });
-        document.querySelectorAll('.dispatch-bar input').forEach(i => i.value = '');
+        document.querySelectorAll('input').forEach(i => i.value = '');
     }
-}
+};
 
-// --- MONITORAMENTO EM TEMPO REAL ---
+// 3. Lista de Pedidos Interativa
 onSnapshot(collection(db, "pedidos"), (snap) => {
     const lista = document.getElementById('lista-pedidos');
-    document.getElementById('contador-pedidos').innerText = snap.size;
     lista.innerHTML = '';
-
     snap.forEach(docSnap => {
         const p = docSnap.data();
         const id = docSnap.id;
-
-        // Adiciona Card
-        lista.innerHTML += `
-            <div class="pedido-card ${p.status}">
-                <h4>#${p.numero} <small>R$ ${p.taxa || '0,00'}</small></h4>
-                <p>${p.endereco}</p>
-                <div style="font-size:11px; margin-top:10px; color:${p.status === 'pendente' ? '#ffa502' : '#00bcd4'}">
-                    ● ${p.status.toUpperCase()}
-                </div>
+        const div = document.createElement('div');
+        div.className = 'pedido-card';
+        div.innerHTML = `
+            <strong>#${p.numero} - R$ ${p.taxa}</strong><p>${p.endereco}</p>
+            <div class="actions">
+                <button class="btn-sm btn-edit" onclick="editar('${id}', '${p.endereco}')">EDITAR</button>
+                <button class="btn-sm btn-del" onclick="remover('${id}')">REMOVER</button>
             </div>`;
-
-        // Adiciona Marcador no Mapa
-        if(!layers.pedidos[id]) {
-            layers.pedidos[id] = L.marker([p.lat, p.lng]).addTo(map)
-                .bindPopup(`<b>Pedido #${p.numero}</b><br>${p.endereco}`);
-        }
+        lista.appendChild(div);
+        if (!markers.pedidos[id]) markers.pedidos[id] = L.marker([p.lat, p.lng]).addTo(map);
     });
 });
 
-// Monitorar Entregadores
-onSnapshot(collection(db, "rastreio"), (snap) => {
-    snap.forEach(docSnap => {
-        const e = docSnap.data();
-        const id = docSnap.id;
-        if(layers.entregadores[id]) {
-            layers.entregadores[id].setLatLng([e.lat, e.lng]);
-        } else {
-            layers.entregadores[id] = L.circleMarker([e.lat, e.lng], {
-                radius: 10, fillColor: "#00bcd4", color: "#fff", weight: 3, fillOpacity: 1
-            }).addTo(map).bindTooltip("Entregador Ativo");
-        }
-    });
-});
-
-document.getElementById('btn-despachar').onclick = despacharPedido;
+window.remover = async (id) => { if(confirm("Excluir?")) await deleteDoc(doc(db, "pedidos", id)); };
+window.editar = async (id, end) => { 
+    const novo = prompt("Novo endereço:", end);
+    if(novo) await updateDoc(doc(db, "pedidos", id), { endereco: novo });
+};
