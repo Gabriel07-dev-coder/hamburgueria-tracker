@@ -3,43 +3,58 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>App Entregador</title>
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <title>App Entregador | GPS Ativo</title>
     <style>
-        body { margin: 0; background: #121212; color: white; font-family: sans-serif; }
-        #map { height: 100vh; }
-        .ui { position: absolute; bottom: 0; width: 100%; background: #1e1e1e; padding: 20px; border-radius: 20px 20px 0 0; z-index: 1000; box-sizing: border-box; text-align: center; }
-        .btn { background: #00bcd4; border: none; padding: 15px; width: 100%; border-radius: 12px; color: white; font-weight: bold; }
+        body { margin: 0; background: #121212; color: white; font-family: sans-serif; display: flex; align-items: center; justify-content: center; height: 100vh; text-align: center; }
+        .status-card { background: #1e1e1e; padding: 30px; border-radius: 20px; border: 1px solid #333; width: 80%; }
+        .pulse { width: 15px; height: 15px; background: #2ed573; border-radius: 50%; display: inline-block; box-shadow: 0 0 10px #2ed573; animation: pulse 1.5s infinite; }
+        @keyframes pulse { 0% { opacity: 0.5; } 50% { opacity: 1; } 100% { opacity: 0.5; } }
     </style>
 </head>
 <body>
-    <div id="map"></div>
-    <div class="ui">
-        <h3 id="info">Buscando GPS...</h3>
-        <p id="sub">Sua posição é enviada à central.</p>
-        <button class="btn" onclick="location.reload()">RECONECTAR</button>
+    <div class="status-card">
+        <div class="pulse"></div>
+        <h2 id="status">Iniciando GPS...</h2>
+        <p id="coords">Aguardando sinal...</p>
     </div>
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
     <script type="module">
         import { db } from './firebase-config.js';
-        import { doc, setDoc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+        import { doc, setDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
 
-        const map = L.map('map', { zoomControl: false }).setView([-25.4351, -49.2786], 15);
-        L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png').addTo(map);
-        let marker;
+        const entregadorId = "entregador_joao"; // ID fixo para o documento
 
-        navigator.geolocation.watchPosition(async (pos) => {
-            const latLng = [pos.coords.latitude, pos.coords.longitude];
-            if (marker) marker.setLatLng(latLng);
-            else marker = L.circleMarker(latLng, { radius: 10, color: '#00bcd4', fillOpacity: 1 }).addTo(map);
-            
-            map.panTo(latLng);
-            document.getElementById('info').innerText = "📡 GPS CONECTADO";
+        function iniciarRastreamento() {
+            if (!navigator.geolocation) return alert("GPS não suportado");
 
-            await setDoc(doc(db, "entregadores", "entregador_1"), {
-                nome: "Entregador Disponível ", lat: pos.coords.latitude, lng: pos.coords.longitude, status: "online"
-            }, { merge: true });
-        }, null, { enableHighAccuracy: true });
+            navigator.geolocation.watchPosition(async (pos) => {
+                const { latitude, longitude } = pos.coords;
+                
+                document.getElementById('status').innerText = "TRANSMITINDO AO VIVO";
+                document.getElementById('coords').innerText = `Lat: ${latitude.toFixed(5)} | Lng: ${longitude.toFixed(5)}`;
+
+                try {
+                    // Atualiza sempre o mesmo documento
+                    await setDoc(doc(db, "entregadores", entregadorId), {
+                        nome: "João Gabriel",
+                        lat: latitude,
+                        lng: longitude,
+                        status: "online",
+                        ultimaAtualizacao: serverTimestamp()
+                    }, { merge: true });
+                } catch (e) { console.error("Erro ao enviar:", e); }
+
+            }, (err) => {
+                document.getElementById('status').innerText = "ERRO NO GPS";
+                console.error(err);
+            }, { 
+                enableHighAccuracy: true, 
+                maximumAge: 0, 
+                timeout: 5000 
+            });
+        }
+
+        iniciarRastreamento();
     </script>
 </body>
 </html>
