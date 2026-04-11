@@ -3,36 +3,41 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>GPS Entregador</title>
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <title>App Entregador</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-    <style>body { margin: 0; background: #000; } #map { height: 100vh; }</style>
+    <style>
+        body { margin: 0; background: #121212; color: white; font-family: sans-serif; }
+        #map { height: 100vh; }
+        .ui { position: absolute; bottom: 0; width: 100%; background: #1e1e1e; padding: 20px; border-radius: 20px 20px 0 0; z-index: 1000; box-sizing: border-box; text-align: center; }
+        .btn { background: #00bcd4; border: none; padding: 15px; width: 100%; border-radius: 12px; color: white; font-weight: bold; }
+    </style>
 </head>
 <body>
     <div id="map"></div>
+    <div class="ui">
+        <h3 id="info">Buscando GPS...</h3>
+        <p id="sub">Sua posição é enviada à central.</p>
+        <button class="btn" onclick="location.reload()">RECONECTAR</button>
+    </div>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script type="module">
         import { db } from './firebase-config.js';
         import { doc, setDoc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
 
-        const map = L.map('map').setView([-25.4351, -49.2786], 15);
+        const map = L.map('map', { zoomControl: false }).setView([-25.4351, -49.2786], 15);
         L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png').addTo(map);
         let marker;
 
         navigator.geolocation.watchPosition(async (pos) => {
-            const { latitude, longitude } = pos.coords;
-            const latLng = [latitude, longitude];
-
-            if (!marker) marker = L.circleMarker(latLng, { radius: 10, color: '#00bcd4' }).addTo(map);
-            else marker.setLatLng(latLng);
+            const latLng = [pos.coords.latitude, pos.coords.longitude];
+            if (marker) marker.setLatLng(latLng);
+            else marker = L.circleMarker(latLng, { radius: 10, color: '#00bcd4', fillOpacity: 1 }).addTo(map);
+            
             map.panTo(latLng);
+            document.getElementById('info').innerText = "📡 GPS CONECTADO";
 
-            // Grava na coleção 'entregadores'
             await setDoc(doc(db, "entregadores", "entregador_1"), {
-                nome: "João Gabriel",
-                lat: latitude,
-                lng: longitude,
-                status: "online",
-                lastUpdate: Date.now()
+                nome: "João Gabriel", lat: pos.coords.latitude, lng: pos.coords.longitude, status: "online"
             }, { merge: true });
         }, null, { enableHighAccuracy: true });
     </script>
