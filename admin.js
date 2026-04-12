@@ -1,44 +1,88 @@
 import { db } from './firebase-config.js';
-import { collection, onSnapshot, addDoc, query, where, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+import { collection, addDoc, doc, deleteDoc, updateDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
 
-let map = L.map('map', { zoomControl: false }).setView([-25.4351, -49.2786], 13);
-L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png').addTo(map);
+/**
+ * Função para adicionar um novo pedido no Firestore
+ * Utiliza Geocoding para converter o endereço em coordenadas para o mapa
+ */
+export async function adicionarPedido() {
+    const inputId = document.getElementById('p-id');
+    const inputEnd = document.getElementById('p-end');
+    const inputTaxa = document.getElementById('p-taxa');
 
-const marcadores = { entregadores: {}, pedidos: {} };
+    // Validação básica para evitar documentos vazios no Firestore
+    if (!inputEnd || !inputEnd.value) {
+        alert("O endereço é obrigatório para localizar a entrega!");
+        return;
+    }
 
-// Monitora Entregadores Online
-onSnapshot(collection(db, "rastreio"), (snapshot) => {
-    snapshot.docChanges().forEach(change => {
-        const data = change.doc.data();
-        const id = change.doc.id;
-        const pos = [data.lat, data.lng];
+    try {
+        // Busca coordenadas em Curitiba usando a API do OpenStreetMap (Nominatim)
+        const busca = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(inputEnd.value + ", Curitiba")}`);
+        const resultados = await busca.json();
 
-        if (marcadores.entregadores[id]) {
-            marcadores.entregadores[id].setLatLng(pos);
+        if (resultados.length > 0) {
+            const { lat, lon } = resultados[0];
+
+            // Gravação no Banco de Dados
+            await addDoc(collection(db, "pedidos"), {
+                numero: inputId.value || "S/N",
+                endereco: inputEnd.value,
+                taxa: inputTaxa.value || "0,00",
+                lat: parseFloat(lat),
+                lng: parseFloat(lon),
+                status: "pendente",
+                criadoEm: serverTimestamp()
+            });
+
+            // Limpa os campos para o próximo pedido
+            inputId.value = '';
+            inputEnd.value = '';
+            inputTaxa.value = '';
+            console.log("Pedido despachado com sucesso!");
         } else {
-            marcadores.entregadores[id] = L.circleMarker(pos, {
-                radius: 8, fillColor: "#00bcd4", color: "#fff", weight: 2, fillOpacity: 1
-            }).addTo(map).bindTooltip("Entregador Ativo");
+            alert("Endereço não encontrado. Verifique a rua e o número.");
         }
-    });
-});
-
-// Função para converter endereço e salvar pedido
-async function criarPedido() {
-    const endereco = document.getElementById('p-end').value;
-    const response = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${endereco}`);
-    const geo = await response.json();
-
-    if (geo.length > 0) {
-        await addDoc(collection(db, "pedidos"), {
-            endereco: endereco,
-            lat: parseFloat(geo[0].lat),
-            lng: parseFloat(geo[0].lon),
-            status: "pendente",
-            criadoEm: serverTimestamp()
-        });
-        alert("Pedido lançado no mapa!");
+    } catch (erro) {
+        console.error("Erro na operação de admin:", erro);
+        alert("Erro ao conectar com o servidor.");
     }
 }
 
-document.querySelector('.btn-add').addEventListener('click', criarPedido);
+/**
+ * Funções de Gerenciamento da Lista
+ * Expostas no objeto window para funcionar com os botões gerados dinamicamente no app.js
+ */
+window.removerPedido = async (id) => {
+    if (confirm("Tem certeza que deseja remover este pedido?")) {
+        try {
+            await deleteDoc(doc(db, "pedidos", id));
+        } catch (erro) {
+            console.error("Erro ao deletar:", erro);
+        }
+    }
+};
+
+window.editarPedido = async (id, endAtual, taxaAtual) => {
+    const novoEnd = prompt("Editar Endereço:", endAtual);
+    const novaTaxa = prompt("Editar Taxa:", taxaAtual);
+
+    if (novoEnd !== null) {
+        try {
+            await updateDoc(doc(db, "pedidos", id), {
+                endereco: novoEnd,
+                taxa: novaTaxa || taxaAtual
+            });
+        } catch (erro) {
+            console.error("Erro ao atualizar:", erro);
+        }
+    }
+};
+
+// Inicialização segura: Garante que o evento só seja atribuído se o botão existir
+document.addEventListener('DOMContentLoaded', () => {
+    const btnAdd = document.getElementById('btn-add');
+    if (btnAdd) {
+        btnAdd.addEventListener('click', adicionarPedido);
+    }
+});
