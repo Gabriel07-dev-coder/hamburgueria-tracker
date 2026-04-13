@@ -3,100 +3,130 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Foody Driver | João Gabriel</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+    <title>Foody Driver | Curitiba</title>
+    
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;800&display=swap" rel="stylesheet">
+    
     <style>
         :root {
-            --bg: #0a0a0a;
-            --card: #161616;
-            --accent: #00bcd4;
-            --danger: #ff4757;
-            --success: #2ed573;
+            --bg: #0c0d10;
+            --card: rgba(22, 23, 27, 0.95);
+            --accent: #25d366; /* Verde iFood */
             --text: #ffffff;
-            --pill: #2b2d42;
+            --pill: #000000;
         }
 
         body {
-            margin: 0; background: var(--bg); color: var(--text);
-            font-family: 'Inter', sans-serif; display: flex;
-            flex-direction: column; align-items: center; justify-content: center;
-            height: 100vh; overflow: hidden;
+            margin: 0; padding: 0;
+            background: var(--bg);
+            font-family: 'Montserrat', sans-serif;
+            color: var(--text);
+            height: 100vh; width: 100vw;
+            overflow: hidden;
+            display: flex; flex-direction: column;
         }
 
-        .app-container { width: 90%; max-width: 400px; text-align: center; }
-
-        /* Pílula de Ganhos com Olho */
-        .ganhos-badge {
-            background: var(--pill); color: white; padding: 12px 24px;
-            border-radius: 30px; display: inline-flex; align-items: center;
-            gap: 12px; font-weight: 800; font-size: 20px;
-            border: 1px solid rgba(255,255,255,0.1); margin-bottom: 25px;
-            box-shadow: 0 10px 20px rgba(0,0,0,0.3); cursor: pointer;
-            transition: transform 0.2s;
-        }
-        .ganhos-badge:active { transform: scale(0.95); }
-
-        .driver-card {
-            background: var(--card); padding: 40px 20px;
-            border-radius: 30px; border: 1px solid #333;
-            box-shadow: 0 20px 40px rgba(0,0,0,0.4);
+        /* 2. Mapa ao Fundo */
+        #map {
+            position: absolute; top: 0; left: 0;
+            width: 100%; height: 100%; z-index: 1;
         }
 
-        .status-badge {
-            display: inline-flex; align-items: center; gap: 8px;
-            background: rgba(46, 213, 115, 0.1); color: var(--success);
-            padding: 8px 16px; border-radius: 20px; font-weight: 600;
-            font-size: 12px; margin-bottom: 20px; text-transform: uppercase;
+        /* 3. Interface Sobreposta (iFood Layout) */
+        .overlay-ui {
+            position: absolute; top: 0; left: 0;
+            width: 100%; height: 100%;
+            z-index: 10;
+            pointer-events: none; /* Deixa o mapa ser interativo por baixo */
+            display: flex; flex-direction: column; justify-content: space-between;
+            padding: 15px; box-sizing: border-box;
         }
-        .status-badge.offline { background: rgba(255, 71, 87, 0.1); color: var(--danger); }
 
-        .pulse { width: 8px; height: 8px; background: currentColor; border-radius: 50%; animation: pulse-anim 1.5s infinite; }
-        @keyframes pulse-anim { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+        .overlay-ui > * { pointer-events: auto; } /* Reativa cliques nos controles */
 
-        .gps-info {
-            display: grid; grid-template-columns: 1fr 1fr; gap: 10px;
-            margin: 25px 0; background: #202020; padding: 15px; border-radius: 15px;
+        /* Barra Superior: Menu, Ganhos, Busca */
+        .header-controls {
+            display: flex; justify-content: space-between; align-items: center; gap: 10px;
         }
-        .info-box span { display: block; font-size: 10px; color: #666; }
-        .info-box strong { font-size: 14px; color: var(--accent); }
 
-        .btn-toggle {
-            width: 100%; padding: 18px; border-radius: 15px; border: none;
-            font-weight: 800; font-size: 16px; cursor: pointer; transition: 0.3s;
+        .icon-btn {
+            background: white; color: #333;
+            width: 45px; height: 45px;
+            border-radius: 50%; display: flex; align-items: center; justify-content: center;
+            border: none; cursor: pointer;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3); font-weight: bold;
+        }
+
+        .ganhos-pill {
+            background: var(--pill); color: white;
+            padding: 10px 20px; border-radius: 25px;
+            font-weight: 800; font-size: 16px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+        }
+
+        /* Painel Inferior de Controle */
+        .bottom-panel {
+            background: white; color: #333;
+            width: 100%; max-width: 450px;
+            border-radius: 20px 20px 0 0;
+            margin: 0 auto;
+            display: flex; flex-direction: column;
+            box-shadow: 0 -5px 15px rgba(0,0,0,0.2);
+            padding: 15px; box-sizing: border-box;
+        }
+
+        .driver-info {
+            display: flex; align-items: center; gap: 15px; margin-bottom: 15px;
+        }
+
+        .driver-avatar {
+            width: 50px; height: 50px;
+            background: #eee; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 20px; font-weight: 800; color: var(--accent);
+        }
+
+        /* Botão Iniciar/Ficar Online (iFood Style) */
+        .btn-status-toggle {
+            width: 100%; padding: 18px;
+            border-radius: 12px; border: none;
+            font-weight: 800; font-size: 16px;
+            cursor: pointer; transition: 0.3s;
             background: var(--accent); color: white;
+            box-shadow: 0 4px 10px rgba(46, 213, 115, 0.3);
         }
-        .btn-toggle.active { background: #222; color: var(--danger); border: 1px solid var(--danger); }
+        .btn-status-toggle.active { background: #333; color: white; box-shadow: none; }
     </style>
 </head>
 <body>
 
-    <div class="app-container">
-        <div class="ganhos-badge" id="btn-toggle-ganhos">
-            <span id="eye-icon">
-                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
-            </span>
-            <span>R$ <span id="total-ganhos">0,00</span></span>
-            <span style="font-size: 12px; opacity: 0.5;">▲</span>
+    <div id="map"></div>
+
+    <div class="overlay-ui">
+        
+        <div class="header-controls">
+            <button class="icon-btn">☰</button>
+            <div class="ganhos-pill">
+                <span style="color: var(--accent);">R$</span> 
+                <span id="total-ganhos">0,00</span>
+            </div>
+            <button class="icon-btn">🔍</button>
         </div>
 
-        <div class="driver-card">
-            <div id="badge" class="status-badge offline">
-                <div class="pulse"></div>
-                <span id="status-text">Sistema Offline</span>
+        <div class="bottom-panel">
+            <div class="driver-info">
+                <div class="driver-avatar">JG</div>
+                <div>
+                    <h3 style="margin: 0; font-size: 18px;">João Gabriel</h3>
+                    <p style="margin: 0; font-size: 12px; color: #666;">Curitiba, PR | <span id="status-text">Sistema Offline</span></p>
+                </div>
             </div>
-
-            <h1 style="margin: 0; font-size: 24px;">João Gabriel</h1>
-            <p style="color: #888; font-size: 13px;">Curitiba, PR</p>
-
-            <div class="gps-info">
-                <div class="info-box"><span>Lat</span><strong id="lat">--.----</strong></div>
-                <div class="info-box"><span>Lng</span><strong id="lng">--.----</strong></div>
-            </div>
-
-            <button id="main-btn" class="btn-toggle">FICAR ONLINE</button>
+            <button id="main-btn" class="btn-status-toggle">FICAR ONLINE (INICIAR)</button>
         </div>
     </div>
 
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script type="module">
         import { db } from './firebase-config.js';
         import { doc, setDoc, collection, onSnapshot, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
@@ -104,70 +134,55 @@
         const entregadorId = "entregador_joao";
         let watchId = null;
         let isOnline = false;
-        let ganhosVisiveis = true;
-        let valorAcumulado = 0;
 
-        // 1. LÓGICA DE GANHOS E PRIVACIDADE
-        const displayGanhos = document.getElementById('total-ganhos');
-        const eyeIcon = document.getElementById('eye-icon');
+        // A. Inicialização do Mapa (Foco Curitiba)
+        // Usei o tema CartoDB Voyager para dar o ar "Uber" profissional da sua imagem
+        const map = L.map('map', { zoomControl: false }).setView([-25.4351, -49.2786], 15);
+        L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png').addTo(map);
 
-        function atualizarDisplay() {
-            if (ganhosVisiveis) {
-                displayGanhos.innerText = valorAcumulado.toLocaleString('pt-BR', { minimumFractionDigits: 2 });
-                eyeIcon.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>`;
-            } else {
-                displayGanhos.innerText = "****";
-                eyeIcon.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg>`;
-            }
-        }
+        // B. Ganhos e GPS Markers
+        let valorGanhos = 0;
+        let driverMarker = null;
 
-        document.getElementById('btn-toggle-ganhos').addEventListener('click', () => {
-            ganhosVisiveis = !ganhosVisiveis;
-            atualizarDisplay();
-        });
-
-        onSnapshot(collection(db, "pedidos"), (snapshot) => {
+        onSnapshot(collection(db, "pedidos"), (snap) => {
             let soma = 0;
-            snapshot.forEach(doc => {
-                const p = doc.data();
-                if (p.taxa) {
-                    const v = parseFloat(p.taxa.toString().replace(',', '.'));
-                    if (!isNaN(v)) soma += v;
-                }
+            snap.forEach(d => {
+                const p = d.data();
+                if (p.taxa) soma += parseFloat(p.taxa.toString().replace(',', '.'));
             });
-            valorAcumulado = soma;
-            atualizarDisplay();
+            document.getElementById('total-ganhos').innerText = soma.toLocaleString('pt-BR', { minimumFractionDigits: 2 });
         });
 
-        // 2. RASTREAMENTO GPS REAL-TIME
         async function updateLocation(pos) {
             const { latitude, longitude } = pos.coords;
-            document.getElementById('lat').innerText = latitude.toFixed(5);
-            document.getElementById('lng').innerText = longitude.toFixed(5);
+            const latLng = [latitude, longitude];
+            
+            // Atualiza Marcador no Mapa
+            if (driverMarker) driverMarker.setLatLng(latLng);
+            else driverMarker = L.circleMarker(latLng, { radius: 10, color: '#00bcd4', fillOpacity: 1 }).addTo(map);
+
+            map.panTo(latLng); // Centraliza no entregador em movimento
 
             await setDoc(doc(db, "entregadores", entregadorId), {
-                nome: "João Gabriel",
-                lat: latitude, lng: longitude,
+                nome: "João Gabriel", lat: latitude, lng: longitude,
                 status: "online", ultimaAtualizacao: serverTimestamp()
             }, { merge: true });
         }
 
+        // C. Lógica de Status Online/Offline (O Botão Azul da sua imagem)
         function toggleStatus() {
             const btn = document.getElementById('main-btn');
-            const badge = document.getElementById('badge');
             const stText = document.getElementById('status-text');
             isOnline = !isOnline;
 
             if (isOnline) {
-                btn.innerText = "FICAR OFFLINE";
+                btn.innerText = "FICAR OFFLINE (PARAR)";
                 btn.classList.add('active');
-                badge.classList.remove('offline');
-                stText.innerText = "Transmitindo GPS";
+                stText.innerText = "Online | Transmitindo";
                 watchId = navigator.geolocation.watchPosition(updateLocation, (err) => console.error(err), { enableHighAccuracy: true });
             } else {
-                btn.innerText = "FICAR ONLINE";
+                btn.innerText = "FICAR ONLINE (INICIAR)";
                 btn.classList.remove('active');
-                badge.classList.add('offline');
                 stText.innerText = "Sistema Offline";
                 if (watchId) navigator.geolocation.clearWatch(watchId);
                 setDoc(doc(db, "entregadores", entregadorId), { status: "offline" }, { merge: true });
