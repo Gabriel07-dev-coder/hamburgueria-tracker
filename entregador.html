@@ -6,97 +6,44 @@
     <title>Foody Driver | Curitiba</title>
     
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.css" />
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;800&display=swap" rel="stylesheet">
     
     <style>
-        :root {
-            --bg: #0c0d10;
-            --card: rgba(22, 23, 27, 0.95);
-            --accent: #25d366; /* Verde iFood */
-            --text: #ffffff;
-            --pill: #000000;
-        }
+        :root { --bg: #0c0d10; --accent: #25d366; --text: #ffffff; }
+        body { margin: 0; padding: 0; font-family: 'Montserrat', sans-serif; height: 100vh; overflow: hidden; }
 
-        body {
-            margin: 0; padding: 0;
-            background: var(--bg);
-            font-family: 'Montserrat', sans-serif;
-            color: var(--text);
-            height: 100vh; width: 100vw;
-            overflow: hidden;
-            display: flex; flex-direction: column;
-        }
+        /* Mapa ocupa a tela toda */
+        #map { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; }
 
-        /* 2. Mapa ao Fundo */
-        #map {
-            position: absolute; top: 0; left: 0;
-            width: 100%; height: 100%; z-index: 1;
-        }
-
-        /* 3. Interface Sobreposta (iFood Layout) */
+        /* Interface Sobreposta */
         .overlay-ui {
-            position: absolute; top: 0; left: 0;
-            width: 100%; height: 100%;
-            z-index: 10;
-            pointer-events: none; /* Deixa o mapa ser interativo por baixo */
-            display: flex; flex-direction: column; justify-content: space-between;
-            padding: 15px; box-sizing: border-box;
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            z-index: 10; pointer-events: none;
+            display: flex; flex-direction: column; justify-content: space-between; padding: 15px; box-sizing: border-box;
+        }
+        .overlay-ui > * { pointer-events: auto; }
+
+        .header-controls { display: flex; justify-content: space-between; align-items: center; }
+        .icon-btn { background: white; width: 45px; height: 45px; border-radius: 50%; border: none; box-shadow: 0 4px 10px rgba(0,0,0,0.1); font-size: 18px; }
+        
+        .ganhos-pill { 
+            background: black; color: white; padding: 10px 25px; border-radius: 30px; 
+            font-weight: 800; font-size: 18px; display: flex; gap: 5px;
         }
 
-        .overlay-ui > * { pointer-events: auto; } /* Reativa cliques nos controles */
-
-        /* Barra Superior: Menu, Ganhos, Busca */
-        .header-controls {
-            display: flex; justify-content: space-between; align-items: center; gap: 10px;
-        }
-
-        .icon-btn {
-            background: white; color: #333;
-            width: 45px; height: 45px;
-            border-radius: 50%; display: flex; align-items: center; justify-content: center;
-            border: none; cursor: pointer;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.3); font-weight: bold;
-        }
-
-        .ganhos-pill {
-            background: var(--pill); color: white;
-            padding: 10px 20px; border-radius: 25px;
-            font-weight: 800; font-size: 16px;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
-        }
-
-        /* Painel Inferior de Controle */
         .bottom-panel {
-            background: white; color: #333;
-            width: 100%; max-width: 450px;
-            border-radius: 20px 20px 0 0;
-            margin: 0 auto;
-            display: flex; flex-direction: column;
-            box-shadow: 0 -5px 15px rgba(0,0,0,0.2);
-            padding: 15px; box-sizing: border-box;
+            background: white; border-radius: 25px 25px 0 0; padding: 20px;
+            box-shadow: 0 -5px 15px rgba(0,0,0,0.1); text-align: center;
         }
+        .btn-toggle {
+            width: 100%; padding: 18px; border-radius: 15px; border: none;
+            background: #333; color: white; font-weight: 800; font-size: 16px; margin-top: 15px;
+        }
+        .btn-toggle.online { background: var(--accent); }
 
-        .driver-info {
-            display: flex; align-items: center; gap: 15px; margin-bottom: 15px;
-        }
-
-        .driver-avatar {
-            width: 50px; height: 50px;
-            background: #eee; border-radius: 50%;
-            display: flex; align-items: center; justify-content: center;
-            font-size: 20px; font-weight: 800; color: var(--accent);
-        }
-
-        /* Botão Iniciar/Ficar Online (iFood Style) */
-        .btn-status-toggle {
-            width: 100%; padding: 18px;
-            border-radius: 12px; border: none;
-            font-weight: 800; font-size: 16px;
-            cursor: pointer; transition: 0.3s;
-            background: var(--accent); color: white;
-            box-shadow: 0 4px 10px rgba(46, 213, 115, 0.3);
-        }
-        .btn-status-toggle.active { background: #333; color: white; box-shadow: none; }
+        /* Esconde o painel de texto da rota para não cobrir o mapa */
+        .leaflet-routing-container { display: none !important; }
     </style>
 </head>
 <body>
@@ -104,64 +51,69 @@
     <div id="map"></div>
 
     <div class="overlay-ui">
-        
         <div class="header-controls">
             <button class="icon-btn">☰</button>
             <div class="ganhos-pill">
                 <span style="color: var(--accent);">R$</span> 
-                <span id="total-ganhos">0,00</span>
+                <span id="total-ganhos">10,00</span>
             </div>
             <button class="icon-btn">🔍</button>
         </div>
 
         <div class="bottom-panel">
-            <div class="driver-info">
-                <div class="driver-avatar">JG</div>
+            <div style="display: flex; align-items: center; gap: 15px; text-align: left;">
+                <div style="width: 50px; height: 50px; background: #f0f0f0; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 800; color: #25d366;">JG</div>
                 <div>
                     <h3 style="margin: 0; font-size: 18px;">João Gabriel</h3>
-                    <p style="margin: 0; font-size: 12px; color: #666;">Curitiba, PR | <span id="status-text">Sistema Offline</span></p>
+                    <p id="status-label" style="margin: 0; font-size: 12px; color: #666;">Curitiba, PR | Offline</p>
                 </div>
             </div>
-            <button id="main-btn" class="btn-status-toggle">FICAR ONLINE (INICIAR)</button>
+            <button id="main-btn" class="btn-toggle">FICAR ONLINE (INICIAR)</button>
         </div>
     </div>
 
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://unpkg.com/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.js"></script>
+
     <script type="module">
         import { db } from './firebase-config.js';
         import { doc, setDoc, collection, onSnapshot, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
 
         const entregadorId = "entregador_joao";
-        let watchId = null;
         let isOnline = false;
+        let watchId = null;
+        let rotaControl = null;
+        let minhaPosicao = null;
 
-        // A. Inicialização do Mapa (Foco Curitiba)
-        // Usei o tema CartoDB Voyager para dar o ar "Uber" profissional da sua imagem
+        // Inicializa Mapa
         const map = L.map('map', { zoomControl: false }).setView([-25.4351, -49.2786], 15);
-        L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png').addTo(map);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
 
-        // B. Ganhos e GPS Markers
-        let valorGanhos = 0;
-        let driverMarker = null;
-
+        // 1. MONITORAR PEDIDOS PARA DESENHAR ROTA
         onSnapshot(collection(db, "pedidos"), (snap) => {
-            let soma = 0;
+            if (rotaControl) { map.removeControl(rotaControl); rotaControl = null; }
+
             snap.forEach(d => {
                 const p = d.data();
-                if (p.taxa) soma += parseFloat(p.taxa.toString().replace(',', '.'));
+                if (p.lat && p.lng && minhaPosicao) {
+                    // Se houver um pedido e o entregador estiver online, desenha a rota
+                    rotaControl = L.Routing.control({
+                        waypoints: [minhaPosicao, L.latLng(p.lat, p.lng)],
+                        lineOptions: { styles: [{ color: '#00bcd4', weight: 6, opacity: 0.8 }] },
+                        createMarker: () => null,
+                        addWaypoints: false,
+                        show: false
+                    }).addTo(map);
+                }
             });
-            document.getElementById('total-ganhos').innerText = soma.toLocaleString('pt-BR', { minimumFractionDigits: 2 });
         });
 
-        async function updateLocation(pos) {
+        // 2. ATUALIZAR LOCALIZAÇÃO
+        async function updateGPS(pos) {
             const { latitude, longitude } = pos.coords;
-            const latLng = [latitude, longitude];
+            minhaPosicao = L.latLng(latitude, longitude);
             
-            // Atualiza Marcador no Mapa
-            if (driverMarker) driverMarker.setLatLng(latLng);
-            else driverMarker = L.circleMarker(latLng, { radius: 10, color: '#00bcd4', fillOpacity: 1 }).addTo(map);
-
-            map.panTo(latLng); // Centraliza no entregador em movimento
+            map.panTo(minhaPosicao);
 
             await setDoc(doc(db, "entregadores", entregadorId), {
                 nome: "João Gabriel", lat: latitude, lng: longitude,
@@ -169,27 +121,25 @@
             }, { merge: true });
         }
 
-        // C. Lógica de Status Online/Offline (O Botão Azul da sua imagem)
-        function toggleStatus() {
+        // 3. BOTÃO ONLINE/OFFLINE
+        document.getElementById('main-btn').onclick = () => {
             const btn = document.getElementById('main-btn');
-            const stText = document.getElementById('status-text');
             isOnline = !isOnline;
 
             if (isOnline) {
                 btn.innerText = "FICAR OFFLINE (PARAR)";
-                btn.classList.add('active');
-                stText.innerText = "Online | Transmitindo";
-                watchId = navigator.geolocation.watchPosition(updateLocation, (err) => console.error(err), { enableHighAccuracy: true });
+                btn.classList.add('online');
+                document.getElementById('status-label').innerText = "Curitiba, PR | Online | Transmitindo";
+                watchId = navigator.geolocation.watchPosition(updateGPS, null, { enableHighAccuracy: true });
             } else {
                 btn.innerText = "FICAR ONLINE (INICIAR)";
-                btn.classList.remove('active');
-                stText.innerText = "Sistema Offline";
+                btn.classList.remove('online');
+                document.getElementById('status-label').innerText = "Curitiba, PR | Offline";
                 if (watchId) navigator.geolocation.clearWatch(watchId);
+                if (rotaControl) map.removeControl(rotaControl);
                 setDoc(doc(db, "entregadores", entregadorId), { status: "offline" }, { merge: true });
             }
-        }
-
-        document.getElementById('main-btn').addEventListener('click', toggleStatus);
+        };
     </script>
 </body>
 </html>
