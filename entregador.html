@@ -2,59 +2,210 @@
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>App Entregador | GPS Ativo</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Foody | Driver App</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
     <style>
-        body { margin: 0; background: #121212; color: white; font-family: sans-serif; display: flex; align-items: center; justify-content: center; height: 100vh; text-align: center; }
-        .status-card { background: #1e1e1e; padding: 30px; border-radius: 20px; border: 1px solid #333; width: 80%; }
-        .pulse { width: 15px; height: 15px; background: #2ed573; border-radius: 50%; display: inline-block; box-shadow: 0 0 10px #2ed573; animation: pulse 1.5s infinite; }
-        @keyframes pulse { 0% { opacity: 0.5; } 50% { opacity: 1; } 100% { opacity: 0.5; } }
+        :root {
+            --bg: #0a0a0a;
+            --card: #161616;
+            --accent: #00bcd4;
+            --danger: #ff4757;
+            --success: #2ed573;
+            --text: #ffffff;
+        }
+
+        body {
+            margin: 0;
+            background: var(--bg);
+            color: var(--text);
+            font-family: 'Inter', sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        /* Container Principal */
+        .app-container {
+            width: 90%;
+            max-width: 400px;
+            text-align: center;
+        }
+
+        .driver-card {
+            background: var(--card);
+            padding: 40px 20px;
+            border-radius: 30px;
+            border: 1px solid #333;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.4);
+            position: relative;
+        }
+
+        /* Indicador de Status */
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(46, 213, 115, 0.1);
+            color: var(--success);
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-weight: 600;
+            font-size: 12px;
+            margin-bottom: 20px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .status-badge.offline {
+            background: rgba(255, 71, 87, 0.1);
+            color: var(--danger);
+        }
+
+        .pulse {
+            width: 8px;
+            height: 8px;
+            background: currentColor;
+            border-radius: 50%;
+            animation: pulse-anim 1.5s infinite;
+        }
+
+        @keyframes pulse-anim {
+            0% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.5); opacity: 0.5; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        h1 { font-size: 28px; font-weight: 800; margin: 10px 0; }
+        p { color: #888; font-size: 14px; margin-bottom: 30px; }
+
+        /* Infos de GPS */
+        .gps-info {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 30px;
+            background: #202020;
+            padding: 15px;
+            border-radius: 15px;
+        }
+
+        .info-box span { display: block; font-size: 10px; color: #666; text-transform: uppercase; }
+        .info-box strong { font-size: 14px; color: var(--accent); }
+
+        /* Botão de Ação */
+        .btn-toggle {
+            width: 100%;
+            padding: 18px;
+            border-radius: 15px;
+            border: none;
+            font-weight: 800;
+            font-size: 16px;
+            cursor: pointer;
+            transition: 0.3s;
+            background: var(--accent);
+            color: white;
+        }
+
+        .btn-toggle.active {
+            background: #222;
+            color: var(--danger);
+            border: 1px solid var(--danger);
+        }
+
+        .btn-toggle:active { transform: scale(0.98); }
     </style>
 </head>
 <body>
-    <div class="status-card">
-        <div class="pulse"></div>
-        <h2 id="status">Iniciando GPS...</h2>
-        <p id="coords">Aguardando sinal...</p>
+
+    <div class="app-container">
+        <div class="driver-card">
+            <div id="badge" class="status-badge offline">
+                <div class="pulse"></div>
+                <span id="status-text">Sistema Offline</span>
+            </div>
+
+            <h1>João Gabriel</h1>
+            <p>Sua localização será transmitida à central quando você estiver online.</p>
+
+            <div class="gps-info">
+                <div class="info-box">
+                    <span>Latitude</span>
+                    <strong id="lat">--.----</strong>
+                </div>
+                <div class="info-box">
+                    <span>Longitude</span>
+                    <strong id="lng">--.----</strong>
+                </div>
+            </div>
+
+            <button id="main-btn" class="btn-toggle">FICAR ONLINE</button>
+        </div>
     </div>
 
     <script type="module">
         import { db } from './firebase-config.js';
         import { doc, setDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
 
-        const entregadorId = "entregador_joao"; // ID fixo para o documento
+        const entregadorId = "entregador_joao";
+        let watchId = null;
+        let isOnline = false;
 
-        function iniciarRastreamento() {
-            if (!navigator.geolocation) return alert("GPS não suportado");
+        const mainBtn = document.getElementById('main-btn');
+        const badge = document.getElementById('badge');
+        const statusText = document.getElementById('status-text');
 
-            navigator.geolocation.watchPosition(async (pos) => {
-                const { latitude, longitude } = pos.coords;
-                
-                document.getElementById('status').innerText = "TRANSMITINDO AO VIVO";
-                document.getElementById('coords').innerText = `Lat: ${latitude.toFixed(5)} | Lng: ${longitude.toFixed(5)}`;
+        async function updateLocation(pos) {
+            const { latitude, longitude } = pos.coords;
+            
+            document.getElementById('lat').innerText = latitude.toFixed(5);
+            document.getElementById('lng').innerText = longitude.toFixed(5);
 
-                try {
-                    // Atualiza sempre o mesmo documento
-                    await setDoc(doc(db, "entregadores", entregadorId), {
-                        nome: "João Gabriel",
-                        lat: latitude,
-                        lng: longitude,
-                        status: "online",
-                        ultimaAtualizacao: serverTimestamp()
-                    }, { merge: true });
-                } catch (e) { console.error("Erro ao enviar:", e); }
-
-            }, (err) => {
-                document.getElementById('status').innerText = "ERRO NO GPS";
-                console.error(err);
-            }, { 
-                enableHighAccuracy: true, 
-                maximumAge: 0, 
-                timeout: 5000 
-            });
+            try {
+                await setDoc(doc(db, "entregadores", entregadorId), {
+                    nome: "João Gabriel",
+                    lat: latitude,
+                    lng: longitude,
+                    status: "online",
+                    ultimaAtualizacao: serverTimestamp()
+                }, { merge: true });
+            } catch (e) { console.error("Erro Firebase:", e); }
         }
 
-        iniciarRastreamento();
+        function toggleStatus() {
+            isOnline = !isOnline;
+
+            if (isOnline) {
+                // Entrar Online
+                mainBtn.innerText = "FICAR OFFLINE";
+                mainBtn.classList.add('active');
+                badge.classList.remove('offline');
+                statusText.innerText = "Transmitindo GPS";
+
+                if (navigator.geolocation) {
+                    watchId = navigator.geolocation.watchPosition(updateLocation, 
+                        (err) => console.error(err), 
+                        { enableHighAccuracy: true }
+                    );
+                }
+            } else {
+                // Ficar Offline
+                mainBtn.innerText = "FICAR ONLINE";
+                mainBtn.classList.remove('active');
+                badge.classList.add('offline');
+                statusText.innerText = "Sistema Offline";
+
+                if (watchId) navigator.geolocation.clearWatch(watchId);
+                
+                // Atualiza status no banco para avisar a central
+                setDoc(doc(db, "entregadores", entregadorId), { status: "offline" }, { merge: true });
+            }
+        }
+
+        mainBtn.addEventListener('click', toggleStatus);
     </script>
 </body>
 </html>
