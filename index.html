@@ -2,19 +2,19 @@
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <title>FOODY ADMIN - Edição Completa</title>
+    <title>FOODY ADMIN - Curitiba</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <style>
         body { margin: 0; display: flex; height: 100vh; background: #121212; color: white; font-family: sans-serif; }
         #sidebar { width: 350px; padding: 20px; overflow-y: auto; border-right: 1px solid #333; }
         #map { flex: 1; z-index: 1; }
         input { width: 100%; padding: 10px; background: #222; border: 1px solid #444; color: white; border-radius: 5px; margin-top: 5px; box-sizing: border-box; }
-        button { width: 100%; padding: 12px; margin-top: 10px; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; transition: 0.3s; }
+        button { width: 100%; padding: 12px; margin-top: 10px; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; }
         .btn-despachar { background: #00bcd4; color: white; }
         .btn-salvar { background: #ffa502; color: white; }
         .pedido-card { background: #1e1e1e; padding: 15px; border-radius: 10px; margin-top: 15px; border-left: 4px solid #00bcd4; }
         .actions { display: flex; gap: 5px; margin-top: 10px; }
-        .btn-small { padding: 5px; font-size: 11px; width: auto; flex: 1; }
+        .btn-small { padding: 5px; font-size: 11px; flex: 1; }
         .delete { background: #ff4757; color: white; }
         .edit { background: #ffa502; color: white; }
     </style>
@@ -27,11 +27,9 @@
     <input type="text" id="p-end" placeholder="Endereço (Ex: Rua Visconde de Nácar, 1440)">
     <input type="text" id="p-taxa" placeholder="Taxa R$">
     <button id="btn-main" class="btn-despachar">DESPACHAR PEDIDO</button>
-    <button id="btn-cancel" style="display:none; background:#444; color:white;">CANCELAR EDIÇÃO</button>
-
+    <button id="btn-cancel" style="display:none; background:#444; color:white;">CANCELAR</button>
     <div id="lista-pedidos"></div>
 </div>
-
 <div id="map"></div>
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
@@ -42,45 +40,36 @@
     const map = L.map('map').setView([-25.4351, -49.2786], 13);
     L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png').addTo(map);
 
-    let editId = null; // Armazena o ID do pedido que está sendo editado
+    let editId = null;
+    let markerEntregador = null;
 
-    // 1. SALVAR OU ATUALIZAR PEDIDO
+    // RASTREIO DO ENTREGADOR
+    onSnapshot(doc(db, "entregadores", "entregador_joao"), (docSnap) => {
+        const data = docSnap.data();
+        if (data && data.lat && data.lng && data.status === "online") {
+            const pos = [data.lat, data.lng];
+            if (!markerEntregador) {
+                markerEntregador = L.circleMarker(pos, { radius: 10, color: '#00bcd4', fillColor: '#00bcd4', fillOpacity: 1 }).addTo(map);
+            } else { markerEntregador.setLatLng(pos); }
+        } else if (markerEntregador) { map.removeLayer(markerEntregador); markerEntregador = null; }
+    });
+
+    // GESTÃO DE PEDIDOS
     document.getElementById('btn-main').onclick = async () => {
         const id = document.getElementById('p-id').value;
         const end = document.getElementById('p-end').value;
         const taxa = document.getElementById('p-taxa').value;
 
-        if (!id || !end) return alert("Preencha os campos!");
-
-        // Busca novas coordenadas se o endereço mudou
         const resp = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(end + ", Curitiba")}`);
         const data = await resp.json();
-        
         if (data.length === 0) return alert("Endereço não encontrado!");
 
-        const payload = {
-            numero: id,
-            endereco: end,
-            taxa: taxa,
-            lat: parseFloat(data[0].lat),
-            lng: parseFloat(data[0].lon),
-            atualizadoEm: serverTimestamp()
-        };
+        const payload = { numero: id, endereco: end, taxa: taxa, lat: parseFloat(data[0].lat), lng: parseFloat(data[0].lon) };
 
-        if (editId) {
-            // Modo Edição
-            await updateDoc(doc(db, "pedidos", editId), payload);
-            resetForm();
-            alert("Pedido atualizado!");
-        } else {
-            // Novo Pedido
-            await addDoc(collection(db, "pedidos"), { ...payload, criadoEm: serverTimestamp() });
-            resetForm();
-            alert("Pedido despachado!");
-        }
+        if (editId) { await updateDoc(doc(db, "pedidos", editId), payload); resetForm(); }
+        else { await addDoc(collection(db, "pedidos"), { ...payload, criadoEm: serverTimestamp() }); resetForm(); }
     };
 
-    // 2. LISTAR PEDIDOS COM BOTÕES DE AÇÃO
     onSnapshot(collection(db, "pedidos"), (snap) => {
         const lista = document.getElementById('lista-pedidos');
         lista.innerHTML = "";
@@ -88,47 +77,25 @@
             const p = d.data();
             const div = document.createElement('div');
             div.className = "pedido-card";
-            div.innerHTML = `
-                <strong>Pedido ${p.numero} - R$ ${p.taxa}</strong><br>
-                <small>${p.endereco}</small>
+            div.innerHTML = `<strong>Pedido ${p.numero}</strong><br><small>${p.endereco}</small>
                 <div class="actions">
-                    <button class="btn-small edit" onclick="prepararEdicao('${d.id}', '${p.numero}', '${p.endereco}', '${p.taxa}')">EDITAR</button>
+                    <button class="btn-small edit" onclick="prepararEdicao('${d.id}','${p.numero}','${p.endereco}','${p.taxa}')">EDITAR</button>
                     <button class="btn-small delete" onclick="removerPedido('${d.id}')">REMOVER</button>
-                </div>
-            `;
+                </div>`;
             lista.appendChild(div);
         });
     });
 
-    // 3. FUNÇÕES DE SUPORTE
     window.prepararEdicao = (id, num, end, taxa) => {
-        editId = id;
-        document.getElementById('p-id').value = num;
-        document.getElementById('p-end').value = end;
-        document.getElementById('p-taxa').value = taxa;
-        
-        document.getElementById('form-title').innerText = "EDITANDO " + num;
+        editId = id; document.getElementById('p-id').value = num;
+        document.getElementById('p-end').value = end; document.getElementById('p-taxa').value = taxa;
         document.getElementById('btn-main').innerText = "SALVAR ALTERAÇÕES";
         document.getElementById('btn-main').className = "btn-salvar";
         document.getElementById('btn-cancel').style.display = "block";
     };
 
-    window.removerPedido = async (id) => {
-        if(confirm("Remover este pedido?")) await deleteDoc(doc(db, "pedidos", id));
-    };
-
-    window.resetForm = () => {
-        editId = null;
-        document.getElementById('p-id').value = "";
-        document.getElementById('p-end').value = "";
-        document.getElementById('p-taxa').value = "";
-        document.getElementById('form-title').innerText = "NOVO PEDIDO";
-        document.getElementById('btn-main').innerText = "DESPACHAR PEDIDO";
-        document.getElementById('btn-main').className = "btn-despachar";
-        document.getElementById('btn-cancel').style.display = "none";
-    };
-
-    document.getElementById('btn-cancel').onclick = resetForm;
+    window.removerPedido = async (id) => { if(confirm("Remover?")) await deleteDoc(doc(db, "pedidos", id)); };
+    window.resetForm = () => { editId = null; document.getElementById('p-id').value = ""; document.getElementById('p-end').value = ""; document.getElementById('p-taxa').value = ""; document.getElementById('btn-cancel').style.display = "none"; document.getElementById('btn-main').innerText = "DESPACHAR"; document.getElementById('btn-main').className = "btn-despachar"; };
 </script>
 </body>
 </html>
