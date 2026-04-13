@@ -16,130 +16,79 @@
         }
 
         body {
-            margin: 0;
-            background: var(--bg);
-            color: var(--text);
-            font-family: 'Inter', sans-serif;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            height: 100vh;
-            overflow: hidden;
+            margin: 0; background: var(--bg); color: var(--text);
+            font-family: 'Inter', sans-serif; display: flex;
+            flex-direction: column; align-items: center; justify-content: center;
+            height: 100vh; overflow: hidden;
         }
 
-        /* Container Principal */
-        .app-container {
-            width: 90%;
-            max-width: 400px;
-            text-align: center;
+        .app-container { width: 90%; max-width: 400px; text-align: center; }
+
+        /* Pílula de Ganhos */
+        .ganhos-badge {
+            background: #2b2d42; color: white; padding: 12px 24px;
+            border-radius: 30px; display: inline-flex; align-items: center;
+            gap: 12px; font-weight: 800; font-size: 20px;
+            border: 1px solid rgba(255,255,255,0.1); margin-bottom: 25px;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.3);
         }
 
         .driver-card {
-            background: var(--card);
-            padding: 40px 20px;
-            border-radius: 30px;
-            border: 1px solid #333;
+            background: var(--card); padding: 40px 20px;
+            border-radius: 30px; border: 1px solid #333;
             box-shadow: 0 20px 40px rgba(0,0,0,0.4);
-            position: relative;
         }
 
-        /* Indicador de Status */
         .status-badge {
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            background: rgba(46, 213, 115, 0.1);
-            color: var(--success);
-            padding: 8px 16px;
-            border-radius: 20px;
-            font-weight: 600;
-            font-size: 12px;
-            margin-bottom: 20px;
-            text-transform: uppercase;
-            letter-spacing: 1px;
+            display: inline-flex; align-items: center; gap: 8px;
+            background: rgba(46, 213, 115, 0.1); color: var(--success);
+            padding: 8px 16px; border-radius: 20px; font-weight: 600;
+            font-size: 12px; margin-bottom: 20px; text-transform: uppercase;
         }
 
-        .status-badge.offline {
-            background: rgba(255, 71, 87, 0.1);
-            color: var(--danger);
-        }
+        .status-badge.offline { background: rgba(255, 71, 87, 0.1); color: var(--danger); }
 
-        .pulse {
-            width: 8px;
-            height: 8px;
-            background: currentColor;
-            border-radius: 50%;
-            animation: pulse-anim 1.5s infinite;
-        }
+        .pulse { width: 8px; height: 8px; background: currentColor; border-radius: 50%; animation: pulse-anim 1.5s infinite; }
+        @keyframes pulse-anim { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
 
-        @keyframes pulse-anim {
-            0% { transform: scale(1); opacity: 1; }
-            50% { transform: scale(1.5); opacity: 0.5; }
-            100% { transform: scale(1); opacity: 1; }
-        }
-
-        h1 { font-size: 28px; font-weight: 800; margin: 10px 0; }
-        p { color: #888; font-size: 14px; margin-bottom: 30px; }
-
-        /* Infos de GPS */
         .gps-info {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 10px;
-            margin-bottom: 30px;
-            background: #202020;
-            padding: 15px;
-            border-radius: 15px;
+            display: grid; grid-template-columns: 1fr 1fr; gap: 10px;
+            margin: 25px 0; background: #202020; padding: 15px; border-radius: 15px;
         }
 
-        .info-box span { display: block; font-size: 10px; color: #666; text-transform: uppercase; }
+        .info-box span { display: block; font-size: 10px; color: #666; }
         .info-box strong { font-size: 14px; color: var(--accent); }
 
-        /* Botão de Ação */
         .btn-toggle {
-            width: 100%;
-            padding: 18px;
-            border-radius: 15px;
-            border: none;
-            font-weight: 800;
-            font-size: 16px;
-            cursor: pointer;
-            transition: 0.3s;
-            background: var(--accent);
-            color: white;
+            width: 100%; padding: 18px; border-radius: 15px; border: none;
+            font-weight: 800; font-size: 16px; cursor: pointer; transition: 0.3s;
+            background: var(--accent); color: white;
         }
 
-        .btn-toggle.active {
-            background: #222;
-            color: var(--danger);
-            border: 1px solid var(--danger);
-        }
-
-        .btn-toggle:active { transform: scale(0.98); }
+        .btn-toggle.active { background: #222; color: var(--danger); border: 1px solid var(--danger); }
     </style>
 </head>
 <body>
 
     <div class="app-container">
+        <div class="ganhos-badge">
+            <span>👁️</span>
+            <span>R$ <span id="total-ganhos">0,00</span></span>
+            <span style="font-size: 12px; opacity: 0.5;">▲</span>
+        </div>
+
         <div class="driver-card">
             <div id="badge" class="status-badge offline">
                 <div class="pulse"></div>
-                <span id="status-text">Sistema Offline</span>
+                <span id="status-text">Offline</span>
             </div>
 
-            <h1>Entregador</h1>
-            <p>Sua localização será transmitida à central quando você estiver online.</p>
+            <h1 style="margin: 0; font-size: 24px;">João Gabriel</h1>
+            <p style="color: #888; font-size: 13px;">Curitiba, PR</p>
 
             <div class="gps-info">
-                <div class="info-box">
-                    <span>Latitude</span>
-                    <strong id="lat">--.----</strong>
-                </div>
-                <div class="info-box">
-                    <span>Longitude</span>
-                    <strong id="lng">--.----</strong>
-                </div>
+                <div class="info-box"><span>Lat</span><strong id="lat">--.----</strong></div>
+                <div class="info-box"><span>Lng</span><strong id="lng">--.----</strong></div>
             </div>
 
             <button id="main-btn" class="btn-toggle">FICAR ONLINE</button>
@@ -148,66 +97,63 @@
 
     <script type="module">
         import { db } from './firebase-config.js';
-        import { doc, setDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+        import { doc, setDoc, collection, onSnapshot, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
 
         const entregadorId = "entregador_joao";
         let watchId = null;
         let isOnline = false;
 
-        const mainBtn = document.getElementById('main-btn');
-        const badge = document.getElementById('badge');
-        const statusText = document.getElementById('status-text');
+        // 1. MONITORAR GANHOS EM TEMPO REAL
+        function monitorarGanhos() {
+            onSnapshot(collection(db, "pedidos"), (snapshot) => {
+                let somaTotal = 0;
+                snapshot.forEach((doc) => {
+                    const p = doc.data();
+                    if (p.taxa) {
+                        const valor = parseFloat(p.taxa.toString().replace(',', '.'));
+                        if (!isNaN(valor)) somaTotal += valor;
+                    }
+                });
+                document.getElementById('total-ganhos').innerText = somaTotal.toLocaleString('pt-BR', { minimumFractionDigits: 2 });
+            });
+        }
 
+        // 2. RASTREAMENTO GPS
         async function updateLocation(pos) {
             const { latitude, longitude } = pos.coords;
-            
             document.getElementById('lat').innerText = latitude.toFixed(5);
             document.getElementById('lng').innerText = longitude.toFixed(5);
 
-            try {
-                await setDoc(doc(db, "entregadores", entregadorId), {
-                    nome: "João Gabriel",
-                    lat: latitude,
-                    lng: longitude,
-                    status: "online",
-                    ultimaAtualizacao: serverTimestamp()
-                }, { merge: true });
-            } catch (e) { console.error("Erro Firebase:", e); }
+            await setDoc(doc(db, "entregadores", entregadorId), {
+                nome: "João Gabriel",
+                lat: latitude, lng: longitude,
+                status: "online", ultimaAtualizacao: serverTimestamp()
+            }, { merge: true });
         }
 
         function toggleStatus() {
+            const btn = document.getElementById('main-btn');
+            const badge = document.getElementById('badge');
             isOnline = !isOnline;
 
             if (isOnline) {
-                // Entrar Online
-                mainBtn.innerText = "FICAR OFFLINE";
-                mainBtn.classList.add('active');
+                btn.innerText = "FICAR OFFLINE";
+                btn.classList.add('active');
                 badge.classList.remove('offline');
-                statusText.innerText = "Transmitindo GPS";
-
-                if (navigator.geolocation) {
-                    watchId = navigator.geolocation.watchPosition(updateLocation, 
-                        (err) => console.error(err), 
-                        { enableHighAccuracy: true }
-                    );
-                }
+                document.getElementById('status-text').innerText = "Online";
+                watchId = navigator.geolocation.watchPosition(updateLocation, (err) => console.error(err), { enableHighAccuracy: true });
             } else {
-                // Ficar Offline
-                mainBtn.innerText = "FICAR ONLINE";
-                mainBtn.classList.remove('active');
+                btn.innerText = "FICAR ONLINE";
+                btn.classList.remove('active');
                 badge.classList.add('offline');
-                statusText.innerText = "Sistema Offline";
-
+                document.getElementById('status-text').innerText = "Offline";
                 if (watchId) navigator.geolocation.clearWatch(watchId);
-                
-                // Atualiza status no banco para avisar a central
                 setDoc(doc(db, "entregadores", entregadorId), { status: "offline" }, { merge: true });
             }
         }
 
-        mainBtn.addEventListener('click', toggleStatus);
+        document.getElementById('main-btn').addEventListener('click', toggleStatus);
+        monitorarGanhos();
     </script>
 </body>
 </html>
-
-
