@@ -9,9 +9,17 @@
     <style>
         body { margin: 0; font-family: sans-serif; height: 100vh; overflow: hidden; }
         #map { position: absolute; top: 0; width: 100%; height: 100%; z-index: 1; }
-        .overlay { position: absolute; width: 100%; height: 100%; z-index: 10; pointer-events: none; display: flex; flex-direction: column; justify-content: space-between; padding: 20px; box-sizing: border-box; }
+        
+        .overlay { position: absolute; width: 100%; height: 100%; z-index: 999; pointer-events: none; display: flex; flex-direction: column; justify-content: space-between; padding: 20px; box-sizing: border-box; }
         .overlay > * { pointer-events: auto; }
-        .ganhos-pill { background: #2c2c2e; color: white; padding: 10px 20px; border-radius: 25px; display: flex; align-items: center; gap: 10px; margin: 0 auto; cursor: pointer; }
+
+        /* Ganhos Corrigido */
+        .ganhos-pill { 
+            background: #000; color: white; padding: 10px 20px; border-radius: 25px; 
+            display: flex; align-items: center; gap: 10px; margin: 0 auto; 
+            cursor: pointer; border: 1px solid #333; box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+        }
+
         .bottom-card { background: white; border-radius: 25px; padding: 20px; box-shadow: 0 -5px 15px rgba(0,0,0,0.1); }
         .btn-status { width: 100%; padding: 18px; border-radius: 12px; border: none; background: #2ecc71; color: white; font-weight: bold; font-size: 16px; }
         .btn-status.offline { background: #333; }
@@ -22,11 +30,19 @@
     <div id="map"></div>
     <div class="overlay">
         <div class="ganhos-pill" id="btn-ganhos">
-            <span id="eye-icon">👁️</span>
-            <span id="txt-ganhos">R$ 0,00</span>
+            <span id="eye-icon" style="font-size: 18px;">👁️</span>
+            <span style="border-left: 1px solid #444; height: 15px;"></span>
+            <span id="txt-ganhos" style="font-weight: 800; font-size: 18px;">R$ 0,00</span>
         </div>
+
         <div class="bottom-card">
-            <div style="margin-bottom: 15px;"><strong>João Gabriel</strong><br><small id="st-label">Curitiba, PR | Offline</small></div>
+            <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 15px;">
+                <div style="width: 40px; height: 40px; background: #e8fcf1; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; color: #2ecc71;">JG</div>
+                <div>
+                    <strong style="font-size: 16px;">João Gabriel</strong><br>
+                    <small id="st-label" style="color: #999;">Curitiba, PR | Offline</small>
+                </div>
+            </div>
             <button id="btn-toggle" class="btn-status">ESTOU ONLINE</button>
         </div>
     </div>
@@ -42,25 +58,44 @@
 
         let isOnline = false, minhaPos = null, rotaControl = null, mostrarGanhos = true, saldoReal = 0;
 
-        // GANHOS
+        // Lógica de Ganhos e Olho
         onSnapshot(doc(db, "entregadores", "entregador_joao"), (docSnap) => {
             const data = docSnap.data();
-            if (data && data.ganhos !== undefined) { saldoReal = data.ganhos; atualizarGanhos(); }
+            if (data && data.ganhos !== undefined) { 
+                saldoReal = parseFloat(data.ganhos); 
+                atualizarDisplayGanhos(); 
+            }
         });
 
-        document.getElementById('btn-ganhos').onclick = () => { mostrarGanhos = !mostrarGanhos; atualizarGanhos(); };
-        function atualizarGanhos() {
-            document.getElementById('txt-ganhos').innerText = mostrarGanhos ? `R$ ${saldoReal.toFixed(2)}` : "R$ ••••";
-            document.getElementById('eye-icon').innerText = mostrarGanhos ? "👁️" : "🙈";
+        document.getElementById('btn-ganhos').onclick = () => { 
+            mostrarGanhos = !mostrarGanhos; 
+            atualizarDisplayGanhos(); 
+        };
+
+        function atualizarDisplayGanhos() {
+            const txt = document.getElementById('txt-ganhos');
+            const eye = document.getElementById('eye-icon');
+            if (mostrarGanhos) {
+                txt.innerText = `R$ ${saldoReal.toLocaleString('pt-BR', {minimumFractionDigits: 2})}`;
+                eye.innerText = "👁️";
+            } else {
+                txt.innerText = "R$ ••••";
+                eye.innerText = "🙈";
+            }
         }
 
-        // ROTA E GPS
+        // Lógica de GPS e Rota
         onSnapshot(collection(db, "pedidos"), (snap) => {
             if (rotaControl) map.removeControl(rotaControl);
             snap.forEach(d => {
                 const p = d.data();
                 if (isOnline && p.lat && minhaPos) {
-                    rotaControl = L.Routing.control({ waypoints: [minhaPos, L.latLng(p.lat, p.lng)], lineOptions: { styles: [{ color: '#00bcd4', weight: 6 }] }, createMarker: () => null, show: false }).addTo(map);
+                    rotaControl = L.Routing.control({ 
+                        waypoints: [minhaPos, L.latLng(p.lat, p.lng)], 
+                        lineOptions: { styles: [{ color: '#00bcd4', weight: 6 }] }, 
+                        createMarker: () => null, 
+                        show: false 
+                    }).addTo(map);
                 }
             });
         });
@@ -68,12 +103,17 @@
         document.getElementById('btn-toggle').onclick = () => {
             isOnline = !isOnline;
             const btn = document.getElementById('btn-toggle');
+            const label = document.getElementById('st-label');
             if (isOnline) {
                 btn.innerText = "FICAR OFFLINE (PARAR)"; btn.classList.add('offline');
+                label.innerText = "Curitiba, PR | Online | Transmitindo";
                 navigator.geolocation.watchPosition((pos) => {
                     minhaPos = L.latLng(pos.coords.latitude, pos.coords.longitude);
                     map.panTo(minhaPos);
-                    setDoc(doc(db, "entregadores", "entregador_joao"), { lat: pos.coords.latitude, lng: pos.coords.longitude, status: "online", ultimaAtualizacao: serverTimestamp() }, { merge: true });
+                    setDoc(doc(db, "entregadores", "entregador_joao"), { 
+                        lat: pos.coords.latitude, lng: pos.coords.longitude, 
+                        status: "online", ultimaAtualizacao: serverTimestamp() 
+                    }, { merge: true });
                 }, null, { enableHighAccuracy: true });
             } else { location.reload(); }
         };
