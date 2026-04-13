@@ -2,45 +2,106 @@
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Foody Admin | Rota Fix</title>
-    
+    <title>FOODY ADMIN - Curitiba</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-    <link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.css" />
-
     <style>
-        :root { --bg: #0f0f0f; --accent: #00bcd4; }
-        body { margin: 0; font-family: sans-serif; background: var(--bg); color: white; }
-        header { height: 70px; background: #151515; display: flex; align-items: center; padding: 0 20px; border-bottom: 1px solid #333; gap: 10px; }
-        .main-container { display: flex; height: calc(100vh - 70px); }
-        .sidebar { width: 300px; background: #151515; border-right: 1px solid #333; padding: 15px; }
+        body { margin: 0; display: flex; height: 100vh; background: #121212; color: white; font-family: sans-serif; }
+        #sidebar { width: 350px; padding: 20px; overflow-y: auto; border-right: 1px solid #333; }
         #map { flex: 1; z-index: 1; }
-        input { background: #252525; border: 1px solid #333; padding: 8px; color: white; border-radius: 5px; }
-        button { background: var(--accent); color: white; border: none; padding: 10px; border-radius: 5px; cursor: pointer; font-weight: bold; }
-        .pedido-card { background: #1a1a1a; padding: 10px; border-radius: 8px; margin-bottom: 10px; border-left: 4px solid var(--accent); }
-        /* Esconde o painel de texto da rota */
-        .leaflet-routing-container { display: none !important; }
+        .input-group { margin-bottom: 10px; }
+        input { width: 100%; padding: 10px; background: #222; border: 1px solid #444; color: white; border-radius: 5px; margin-top: 5px; }
+        button { width: 100%; padding: 12px; margin-top: 10px; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; }
+        .btn-despachar { background: #00bcd4; color: white; }
+        .pedido-card { background: #1e1e1e; padding: 15px; border-radius: 10px; margin-top: 15px; border-left: 4px solid #00bcd4; position: relative; }
+        .btn-delete { background: #ff4757; color: white; padding: 5px; font-size: 10px; margin-top: 10px; width: auto; }
+        .btn-edit { background: #ffa502; color: white; padding: 5px; font-size: 10px; margin-top: 10px; width: auto; margin-right: 5px; }
     </style>
 </head>
 <body>
-    <header>
-        <strong style="color: var(--accent);">FOODY ADMIN</strong>
-        <input type="text" id="p-id" placeholder="Nº" style="width: 40px;">
-        <input type="text" id="p-end" placeholder="Endereço (Ex: Rua Visconde de Nácar, 1440)" style="flex: 1;">
-        <input type="text" id="p-taxa" placeholder="R$" style="width: 60px;">
-        <button id="btn-add">DESPACHAR</button>
-    </header>
 
-    <div class="main-container">
-        <aside class="sidebar">
-            <h3>Pedidos <span id="contador-pedidos">0</span></h3>
-            <div id="lista-pedidos"></div>
-        </aside>
-        <div id="map"></div>
+<div id="sidebar">
+    <h2>FOODY ADMIN</h2>
+    <div class="input-group">
+        <input type="text" id="p-id" placeholder="Nº do Pedido (Ex: #01)">
+        <input type="text" id="p-end" placeholder="Endereço (Ex: Rua Visconde de Nácar, 1440)">
+        <input type="text" id="p-taxa" placeholder="Taxa R$">
+        <button id="btn-add" class="btn-despachar">DESPACHAR PEDIDO</button>
     </div>
 
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-    <script src="https://unpkg.com/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.js"></script>
-    <script type="module" src="app.js"></script>
+    <div id="lista-pedidos">
+        </div>
+</div>
+
+<div id="map"></div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script type="module">
+    import { db } from './firebase-config.js';
+    import { collection, addDoc, onSnapshot, doc, deleteDoc, updateDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+
+    const map = L.map('map').setView([-25.4351, -49.2786], 13);
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png').addTo(map);
+
+    // 1. ADICIONAR PEDIDO COM GEOLOCALIZAÇÃO (Essencial para a rota do entregador)
+    document.getElementById('btn-add').onclick = async () => {
+        const id = document.getElementById('p-id').value;
+        const end = document.getElementById('p-end').value;
+        const taxa = document.getElementById('p-taxa').value;
+
+        if (!id || !end) return alert("Preencha os dados!");
+
+        // Busca coordenadas em Curitiba
+        const resp = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(end + ", Curitiba")}`);
+        const data = await resp.json();
+
+        if (data.length > 0) {
+            await addDoc(collection(db, "pedidos"), {
+                numero: id,
+                endereco: end,
+                taxa: taxa,
+                lat: parseFloat(data[0].lat),
+                lng: parseFloat(data[0].lon),
+                status: "pendente",
+                criadoEm: serverTimestamp()
+            });
+            alert("Pedido enviado para o entregador!");
+        } else {
+            alert("Endereço não localizado!");
+        }
+    };
+
+    // 2. LISTAR, EDITAR E REMOVER PEDIDOS
+    onSnapshot(collection(db, "pedidos"), (snap) => {
+        const lista = document.getElementById('lista-pedidos');
+        lista.innerHTML = "";
+        
+        snap.forEach(d => {
+            const p = d.data();
+            const div = document.createElement('div');
+            div.className = "pedido-card";
+            div.innerHTML = `
+                <strong>Pedido ${p.numero} - R$ ${p.taxa}</strong><br>
+                <small>${p.endereco}</small><br>
+                <button class="btn-edit" onclick="editarPedido('${d.id}', '${p.taxa}')">EDITAR TAXA</button>
+                <button class="btn-delete" onclick="removerPedido('${d.id}')">REMOVER</button>
+            `;
+            lista.appendChild(div);
+        });
+    });
+
+    // Funções Globais para os botões do Card
+    window.removerPedido = async (id) => {
+        if(confirm("Deseja excluir este pedido?")) {
+            await deleteDoc(doc(db, "pedidos", id));
+        }
+    };
+
+    window.editarPedido = async (id, taxaAtual) => {
+        const novaTaxa = prompt("Nova Taxa R$:", taxaAtual);
+        if (novaTaxa) {
+            await updateDoc(doc(db, "pedidos", id), { taxa: novaTaxa });
+        }
+    };
+</script>
 </body>
 </html>
