@@ -10,39 +10,29 @@
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;800&display=swap" rel="stylesheet">
     
     <style>
-        :root { --bg: #0c0d10; --accent: #25d366; --text: #ffffff; }
+        :root { --accent: #2ecc71; --bg: #f5f6fa; }
         body { margin: 0; padding: 0; font-family: 'Montserrat', sans-serif; height: 100vh; overflow: hidden; }
-
-        /* Mapa ocupa a tela toda */
+        
         #map { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; }
 
-        /* Interface Sobreposta */
-        .overlay-ui {
-            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            z-index: 10; pointer-events: none;
-            display: flex; flex-direction: column; justify-content: space-between; padding: 15px; box-sizing: border-box;
-        }
-        .overlay-ui > * { pointer-events: auto; }
+        /* UI Overlays */
+        .overlay { position: absolute; width: 100%; height: 100%; z-index: 10; pointer-events: none; display: flex; flex-direction: column; justify-content: space-between; padding: 20px; box-sizing: border-box; }
+        .overlay > * { pointer-events: auto; }
 
-        .header-controls { display: flex; justify-content: space-between; align-items: center; }
-        .icon-btn { background: white; width: 45px; height: 45px; border-radius: 50%; border: none; box-shadow: 0 4px 10px rgba(0,0,0,0.1); font-size: 18px; }
+        .top-nav { display: flex; justify-content: space-between; align-items: center; }
+        .btn-round { background: white; border: none; width: 45px; height: 45px; border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 10px rgba(0,0,0,0.1); cursor: pointer; }
         
-        .ganhos-pill { 
-            background: black; color: white; padding: 10px 25px; border-radius: 30px; 
-            font-weight: 800; font-size: 18px; display: flex; gap: 5px;
-        }
+        .ganhos { background: black; color: white; padding: 12px 25px; border-radius: 30px; font-weight: 800; font-size: 18px; }
+        .ganhos span { color: var(--accent); }
 
-        .bottom-panel {
-            background: white; border-radius: 25px 25px 0 0; padding: 20px;
-            box-shadow: 0 -5px 15px rgba(0,0,0,0.1); text-align: center;
-        }
-        .btn-toggle {
-            width: 100%; padding: 18px; border-radius: 15px; border: none;
-            background: #333; color: white; font-weight: 800; font-size: 16px; margin-top: 15px;
-        }
-        .btn-toggle.online { background: var(--accent); }
+        .bottom-card { background: white; border-radius: 30px; padding: 25px; box-shadow: 0 -5px 20px rgba(0,0,0,0.05); }
+        .user-info { display: flex; align-items: center; gap: 15px; margin-bottom: 20px; text-align: left; }
+        .avatar { width: 50px; height: 50px; background: #e8fcf1; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 800; color: var(--accent); }
+        
+        .btn-status { width: 100%; padding: 20px; border-radius: 15px; border: none; background: var(--accent); color: white; font-weight: 800; font-size: 16px; cursor: pointer; transition: 0.3s; }
+        .btn-status.offline { background: #333; }
 
-        /* Esconde o painel de texto da rota para não cobrir o mapa */
+        /* Esconde o texto da rota */
         .leaflet-routing-container { display: none !important; }
     </style>
 </head>
@@ -50,25 +40,22 @@
 
     <div id="map"></div>
 
-    <div class="overlay-ui">
-        <div class="header-controls">
-            <button class="icon-btn">☰</button>
-            <div class="ganhos-pill">
-                <span style="color: var(--accent);">R$</span> 
-                <span id="total-ganhos">10,00</span>
-            </div>
-            <button class="icon-btn">🔍</button>
+    <div class="overlay">
+        <div class="top-nav">
+            <button class="btn-round">☰</button>
+            <div class="ganhos"><span>R$</span> <span id="val-ganhos">10,00</span></div>
+            <button class="btn-round">🔍</button>
         </div>
 
-        <div class="bottom-panel">
-            <div style="display: flex; align-items: center; gap: 15px; text-align: left;">
-                <div style="width: 50px; height: 50px; background: #f0f0f0; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 800; color: #25d366;">JG</div>
+        <div class="bottom-card">
+            <div class="user-info">
+                <div class="avatar">JG</div>
                 <div>
                     <h3 style="margin: 0; font-size: 18px;">João Gabriel</h3>
-                    <p id="status-label" style="margin: 0; font-size: 12px; color: #666;">Curitiba, PR | Offline</p>
+                    <p id="st-label" style="margin: 0; font-size: 12px; color: #999;">Curitiba, PR | Online | Transmitindo</p>
                 </div>
             </div>
-            <button id="main-btn" class="btn-toggle">FICAR ONLINE (INICIAR)</button>
+            <button id="btn-toggle" class="btn-status">FICAR OFFLINE (PARAR)</button>
         </div>
     </div>
 
@@ -80,25 +67,23 @@
         import { doc, setDoc, collection, onSnapshot, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
 
         const entregadorId = "entregador_joao";
-        let isOnline = false;
-        let watchId = null;
+        let isOnline = true; // Começa online conforme seu print
         let rotaControl = null;
-        let minhaPosicao = null;
+        let minhaPos = null;
 
-        // Inicializa Mapa
+        // Inicia Mapa
         const map = L.map('map', { zoomControl: false }).setView([-25.4351, -49.2786], 15);
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
 
-        // 1. MONITORAR PEDIDOS PARA DESENHAR ROTA
+        // 1. ESCUTA OS PEDIDOS PARA DESENHAR A ROTA
         onSnapshot(collection(db, "pedidos"), (snap) => {
             if (rotaControl) { map.removeControl(rotaControl); rotaControl = null; }
 
             snap.forEach(d => {
                 const p = d.data();
-                if (p.lat && p.lng && minhaPosicao) {
-                    // Se houver um pedido e o entregador estiver online, desenha a rota
+                if (p.lat && p.lng && minhaPos) {
                     rotaControl = L.Routing.control({
-                        waypoints: [minhaPosicao, L.latLng(p.lat, p.lng)],
+                        waypoints: [minhaPos, L.latLng(p.lat, p.lng)],
                         lineOptions: { styles: [{ color: '#00bcd4', weight: 6, opacity: 0.8 }] },
                         createMarker: () => null,
                         addWaypoints: false,
@@ -108,34 +93,30 @@
             });
         });
 
-        // 2. ATUALIZAR LOCALIZAÇÃO
-        async function updateGPS(pos) {
-            const { latitude, longitude } = pos.coords;
-            minhaPosicao = L.latLng(latitude, longitude);
-            
-            map.panTo(minhaPosicao);
+        // 2. ATUALIZA GPS EM TEMPO REAL
+        navigator.geolocation.watchPosition((pos) => {
+            minhaPos = L.latLng(pos.coords.latitude, pos.coords.longitude);
+            if (isOnline) {
+                map.panTo(minhaPos);
+                setDoc(doc(db, "entregadores", entregadorId), {
+                    lat: pos.coords.latitude, lng: pos.coords.longitude,
+                    status: "online", ultimaAtualizacao: serverTimestamp()
+                }, { merge: true });
+            }
+        }, null, { enableHighAccuracy: true });
 
-            await setDoc(doc(db, "entregadores", entregadorId), {
-                nome: "João Gabriel", lat: latitude, lng: longitude,
-                status: "online", ultimaAtualizacao: serverTimestamp()
-            }, { merge: true });
-        }
-
-        // 3. BOTÃO ONLINE/OFFLINE
-        document.getElementById('main-btn').onclick = () => {
-            const btn = document.getElementById('main-btn');
+        // 3. BOTÃO DE STATUS
+        document.getElementById('btn-toggle').onclick = () => {
             isOnline = !isOnline;
-
+            const btn = document.getElementById('btn-toggle');
             if (isOnline) {
                 btn.innerText = "FICAR OFFLINE (PARAR)";
-                btn.classList.add('online');
-                document.getElementById('status-label').innerText = "Curitiba, PR | Online | Transmitindo";
-                watchId = navigator.geolocation.watchPosition(updateGPS, null, { enableHighAccuracy: true });
+                btn.classList.remove('offline');
+                document.getElementById('st-label').innerText = "Curitiba, PR | Online | Transmitindo";
             } else {
                 btn.innerText = "FICAR ONLINE (INICIAR)";
-                btn.classList.remove('online');
-                document.getElementById('status-label').innerText = "Curitiba, PR | Offline";
-                if (watchId) navigator.geolocation.clearWatch(watchId);
+                btn.classList.add('offline');
+                document.getElementById('st-label').innerText = "Curitiba, PR | Offline";
                 if (rotaControl) map.removeControl(rotaControl);
                 setDoc(doc(db, "entregadores", entregadorId), { status: "offline" }, { merge: true });
             }
