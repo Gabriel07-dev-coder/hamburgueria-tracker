@@ -4,90 +4,81 @@ import { collection, onSnapshot, addDoc, doc, deleteDoc, serverTimestamp } from 
 const map = L.map('map').setView([-25.4351, -49.2786], 13);
 L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png').addTo(map);
 
-const markers = { pedidos: {}, entregadores: {} };
-let rotaAtiva = null;
-let ultimaPosicaoEntregador = null;
+let markers = { pedidos: {}, entregadores: {} };
+let rotaControl = null;
+let posEntregador = null;
 
-// 1. MONITORAR ENTREGADOR
+// 1. Monitora o João
 onSnapshot(collection(db, "entregadores"), (snap) => {
-    snap.forEach(docSnap => {
-        const e = docSnap.data();
-        if (e.status === "online") {
-            ultimaPosicaoEntregador = L.latLng(e.lat, e.lng);
-            if (markers.entregadores[docSnap.id]) {
-                markers.entregadores[docSnap.id].setLatLng([e.lat, e.lng]);
+    snap.forEach(d => {
+        const e = d.data();
+        if (e.status === "online" && e.lat) {
+            posEntregador = L.latLng(e.lat, e.lng);
+            if (markers.entregadores[d.id]) {
+                markers.entregadores[d.id].setLatLng(posEntregador);
             } else {
-                markers.entregadores[docSnap.id] = L.circleMarker([e.lat, e.lng], { radius: 8, color: '#00bcd4', fillOpacity: 1 }).addTo(map).bindTooltip(e.nome, { permanent: true });
+                markers.entregadores[d.id] = L.circleMarker(posEntregador, { radius: 8, color: '#00bcd4', fillOpacity: 1 }).addTo(map).bindTooltip(e.nome, { permanent: true });
             }
         }
     });
 });
 
-// 2. FUNÇÃO PARA DESENHAR ROTA
-function atualizarRota(destinoLat, destinoLng) {
-    if (rotaAtiva) { map.removeControl(rotaAtiva); rotaAtiva = null; }
+// 2. Desenha a Rota
+function desenharRota(destLat, destLng) {
+    if (rotaControl) map.removeControl(rotaControl);
     
-    if (ultimaPosicaoEntregador && destinoLat && destinoLng) {
-        console.log("Traçando rota para:", destinoLat, destinoLng); // Para você testar no console
-        rotaAtiva = L.Routing.control({
-            waypoints: [
-                ultimaPosicaoEntregador,
-                L.latLng(destinoLat, destinoLng)
-            ],
-            lineOptions: { styles: [{ color: '#00bcd4', weight: 6, opacity: 0.9 }] },
-            createMarker: function() { return null; },
+    if (posEntregador && destLat && destLng) {
+        rotaControl = L.Routing.control({
+            waypoints: [posEntregador, L.latLng(destLat, destLng)],
+            lineOptions: { styles: [{ color: '#00bcd4', weight: 6, opacity: 0.8 }] },
+            createMarker: () => null,
             addWaypoints: false,
             show: false
         }).addTo(map);
     }
 }
 
-// 3. MONITORAR PEDIDOS
+// 3. Monitora Pedidos
 onSnapshot(collection(db, "pedidos"), (snap) => {
     const lista = document.getElementById('lista-pedidos');
     document.getElementById('contador-pedidos').innerText = snap.size;
     lista.innerHTML = '';
-
-    // Limpar marcadores de pedidos antigos
+    
+    // Limpa marcadores de pedidos
     Object.values(markers.pedidos).forEach(m => map.removeLayer(m));
     markers.pedidos = {};
 
-    snap.forEach(docSnap => {
-        const p = docSnap.data();
-        const id = docSnap.id;
-
+    snap.forEach(d => {
+        const p = d.data();
         const card = document.createElement('div');
         card.className = 'pedido-card';
-        card.innerHTML = `<strong>#${p.numero} - R$ ${p.taxa}</strong><p>${p.endereco}</p>
-        <button style="background:#e74c3c; color:white; border:none; padding:5px; border-radius:5px; cursor:pointer;" onclick="remover('${id}')">REMOVER</button>`;
+        card.innerHTML = `<strong>#${p.numero} - R$ ${p.taxa}</strong><p>${p.endereco}</p>`;
         lista.appendChild(card);
 
         if (p.lat && p.lng) {
-            markers.pedidos[id] = L.marker([p.lat, p.lng]).addTo(map);
-            atualizarRota(p.lat, p.lng); // Tenta desenhar a rota para o pedido atual
+            markers.pedidos[d.id] = L.marker([p.lat, p.lng]).addTo(map);
+            desenharRota(p.lat, p.lng);
         }
     });
 });
 
-// 4. DESPACHAR COM BUSCA DE COORDENADAS
+// 4. Botão Despachar
 document.getElementById('btn-add').onclick = async () => {
     const end = document.getElementById('p-end').value;
-    if (!end) return alert("Endereço vazio!");
+    if (!end) return;
+    
+    const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(end + ", Curitiba")}`);
+    const data = await res.json();
 
-    const resp = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(end + ", Curitiba")}`);
-    const geo = await resp.json();
-
-    if (geo.length > 0) {
+    if (data.length > 0) {
         await addDoc(collection(db, "pedidos"), {
             numero: document.getElementById('p-id').value,
             endereco: end,
             taxa: document.getElementById('p-taxa').value,
-            lat: parseFloat(geo[0].lat),
-            lng: parseFloat(geo[0].lon),
+            lat: parseFloat(data[0].lat),
+            lng: parseFloat(data[0].lon),
             criadoEm: serverTimestamp()
         });
         document.querySelectorAll('header input').forEach(i => i.value = '');
-    } else alert("Endereço não localizado!");
+    }
 };
-
-window.remover = async (id) => { if(confirm("Remover?")) await deleteDoc(doc(db, "pedidos", id)); };
