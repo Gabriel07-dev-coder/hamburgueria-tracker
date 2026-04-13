@@ -43,7 +43,7 @@
     let editId = null;
     let markerEntregador = null;
 
-    // RASTREIO DO ENTREGADOR
+    // Rastreio do Entregador no Mapa
     onSnapshot(doc(db, "entregadores", "entregador_joao"), (docSnap) => {
         const data = docSnap.data();
         if (data && data.lat && data.lng && data.status === "online") {
@@ -54,7 +54,7 @@
         } else if (markerEntregador) { map.removeLayer(markerEntregador); markerEntregador = null; }
     });
 
-    // GESTÃO DE PEDIDOS
+    // Lógica de Enviar/Editar Pedido
     document.getElementById('btn-main').onclick = async () => {
         const id = document.getElementById('p-id').value;
         const end = document.getElementById('p-end').value;
