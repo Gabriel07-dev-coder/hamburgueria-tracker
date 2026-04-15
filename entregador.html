@@ -6,25 +6,24 @@
     <title>Foody Driver</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <style>
-        body { margin: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; height: 100vh; overflow: hidden; background: #000; }
+        body { margin: 0; font-family: 'Segoe UI', sans-serif; height: 100vh; overflow: hidden; background: #000; }
         #map { position: absolute; top: 0; width: 100%; height: 100%; z-index: 1; }
         
-        /* Pílula de Ganhos - Design Fiel à 99 */
+        /* Pílula de Ganhos - Estilo 99 */
         .top-ui { position: absolute; top: 20px; width: 100%; display: flex; justify-content: center; z-index: 1000; }
         .ganhos-pill { 
             background: #23232e; color: white; padding: 8px 18px; border-radius: 25px; 
             display: flex; align-items: center; gap: 10px; cursor: pointer; border: 1px solid #333;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
         }
-        .separator { border-left: 1px solid #444; height: 16px; margin: 0 2px; }
-        
-        /* Ícone de Olho Branco */
-        .eye-svg { width: 22px; height: 22px; fill: white; display: flex; align-items: center; }
+        .separator { border-left: 1px solid #444; height: 16px; }
+        .eye-svg { width: 20px; height: 20px; fill: white; display: flex; align-items: center; }
 
         /* Card Inferior */
         .bottom-ui { position: absolute; bottom: 0; width: 100%; z-index: 1000; padding: 15px; box-sizing: border-box; }
         .card { background: white; border-radius: 20px; padding: 20px; box-shadow: 0 -5px 15px rgba(0,0,0,0.1); }
-        .btn-online { 
+        
+        /* Botão com ID correto para o JS */
+        #main-action { 
             width: 100%; padding: 16px; border-radius: 10px; border: none; 
             background: #2ecc71; color: white; font-weight: bold; font-size: 16px; cursor: pointer;
         }
@@ -40,7 +39,7 @@
                 <svg viewBox="0 0 24 24"><path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/></svg>
             </div>
             <div class="separator"></div>
-            <span id="txt-ganhos" style="font-weight: 600; font-size: 18px; letter-spacing: 0.5px;">R$ 0,00</span>
+            <span id="txt-ganhos" style="font-weight: 600; font-size: 18px;">R$ 0,00</span>
             <span style="font-size: 10px; color: #aaa;">▲</span>
         </div>
     </div>
@@ -51,46 +50,58 @@
                 <div style="width: 40px; height: 40px; background: #e8fcf1; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; color: #2ecc71;">JG</div>
                 <div>
                     <strong style="font-size: 16px;">João Gabriel</strong><br>
-                    <small style="color: #888;">Curitiba, PR | Offline</small>
+                    <small id="st-label" style="color: #888;">Curitiba, PR | Offline</small>
                 </div>
             </div>
-            <button class="btn-online">FICAR ONLINE</button>
+            <button id="main-action">FICAR ONLINE</button>
         </div>
     </div>
 
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script type="module">
         import { db } from './firebase-config.js';
-        import { doc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
-
-        let mostrar = true;
-        let saldo = 0;
-
-        const eyeOpen = `<svg viewBox="0 0 24 24"><path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/></svg>`;
-        const eyeClosed = `<svg viewBox="0 0 24 24"><path d="M12 7c2.76 0 5 2.24 5 5 0 .65-.13 1.26-.36 1.82l2.92 2.92c1.51-1.26 2.7-2.89 3.44-4.74-1.73-4.39-6-7.5-11-7.5-1.4 0-2.74.25-3.98.7l2.16 2.16C10.74 7.13 11.35 7 12 7zM2 4.27l2.28 2.28.46.46C3.08 8.3 1.78 10.02 1 12c1.73 4.39 6 7.5 11 7.5 1.55 0 3.03-.3 4.38-.84l.42.42L19.73 22 21 20.73 3.27 3 2 4.27zM7.53 9.8l1.55 1.55c-.05.21-.08.43-.08.65 0 1.66 1.34 3 3 3 .22 0 .44-.03.65-.08l1.55 1.55c-.67.33-1.41.53-2.2.53-2.76 0-5-2.24-5-5 0-.79.2-1.53.53-2.2zm4.31-.78l3.15 3.15.02-.16c0-1.66-1.34-3-3-3l-.17.01z"/></svg>`;
+        import { doc, onSnapshot, setDoc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
 
         const map = L.map('map', { zoomControl: false }).setView([-25.4351, -49.2786], 15);
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
 
-        onSnapshot(doc(db, "entregadores", "entregador_joao"), (docSnap) => {
-            const dados = docSnap.data();
-            if (dados && dados.ganhos !== undefined) {
-                saldo = parseFloat(dados.ganhos);
-                atualizarUI();
-            }
-        });
+        let statusAtual = "offline";
+        let markerJG = null;
 
-        function atualizarUI() {
-            const txt = document.getElementById('txt-ganhos');
-            const eyeCont = document.getElementById('eye-container');
-            
-            txt.innerText = mostrar ? `R$ ${saldo.toFixed(2).replace('.',',')}` : "R$ ••••";
-            eyeCont.innerHTML = mostrar ? eyeOpen : eyeClosed;
+        const btnMain = document.getElementById('main-action');
+        const labelStatus = document.getElementById('st-label');
+
+        // Função do Marcador Azul
+        function iniciarGps() {
+            navigator.geolocation.watchPosition(p => {
+                const pos = L.latLng(p.coords.latitude, p.coords.longitude);
+                
+                if (!markerJG) {
+                    // Marcador azul idêntico ao GPS real
+                    markerJG = L.circleMarker(pos, { 
+                        radius: 10, color: '#fff', weight: 2, fillColor: '#007aff', fillOpacity: 1 
+                    }).addTo(map);
+                } else {
+                    markerJG.setLatLng(pos);
+                }
+                map.panTo(pos);
+
+                setDoc(doc(db, "entregadores", "entregador_joao"), { 
+                    lat: p.coords.latitude, lng: p.coords.longitude, status: statusAtual 
+                }, { merge: true });
+            }, null, { enableHighAccuracy: true });
         }
 
-        document.getElementById('btn-ganhos').onclick = () => {
-            mostrar = !mostrar;
-            atualizarUI();
+        btnMain.onclick = () => {
+            if (statusAtual === "offline") {
+                statusAtual = "online";
+                btnMain.innerText = "SAIR DE SERVIÇO";
+                btnMain.style.background = "#ff4757";
+                labelStatus.innerText = "Curitiba, PR | Online";
+                iniciarGps(); // Ativa a localização ao ficar online
+            } else {
+                location.reload();
+            }
         };
     </script>
 </body>
