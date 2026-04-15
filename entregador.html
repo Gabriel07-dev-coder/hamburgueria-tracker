@@ -1,8 +1,8 @@
-// Variáveis de controle de exibição
+// 1. Variáveis de controle
 let mostrarGanhos = true;
 let saldoAcumulado = 0;
 
-// Escuta específica para os ganhos no Firebase
+// 2. Escuta os ganhos no Firebase
 onSnapshot(doc(db, "entregadores", "entregador_joao"), (docSnap) => {
     const dados = docSnap.data();
     if (dados && dados.ganhos !== undefined) {
@@ -11,21 +11,23 @@ onSnapshot(doc(db, "entregadores", "entregador_joao"), (docSnap) => {
     }
 });
 
-// Função para atualizar o texto e o ícone
+// 3. Função para atualizar a tela
 function atualizarInterfaceGanhos() {
     const elementoTexto = document.getElementById('txt-ganhos');
     const elementoIcone = document.getElementById('eye-icon');
 
-    if (mostrarGanhos) {
-        elementoTexto.innerText = `R$ ${saldoAcumulado.toLocaleString('pt-BR', {minimumFractionDigits: 2})}`;
-        elementoIcone.innerText = "👁️";
-    } else {
-        elementoTexto.innerText = "R$ ••••";
-        elementoIcone.innerText = "🙈";
+    if (elementoTexto && elementoIcone) {
+        if (mostrarGanhos) {
+            elementoTexto.innerText = `R$ ${saldoAcumulado.toLocaleString('pt-BR', {minimumFractionDigits: 2})}`;
+            elementoIcone.innerText = "👁️";
+        } else {
+            elementoTexto.innerText = "R$ ••••";
+            elementoIcone.innerText = "🙈";
+        }
     }
 }
 
-// Evento de clique na pílula
+// 4. Evento do clique no botão de ganhos
 document.getElementById('btn-ganhos').onclick = () => {
     mostrarGanhos = !mostrarGanhos;
     atualizarInterfaceGanhos();
