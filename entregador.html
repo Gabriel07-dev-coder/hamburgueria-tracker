@@ -2,20 +2,19 @@
 let mostrarGanhos = true;
 let saldoAcumulado = 0;
 
-// Escuta específica para os ganhos no documento do João Gabriel
+// Escuta específica para os ganhos no Firebase
 onSnapshot(doc(db, "entregadores", "entregador_joao"), (docSnap) => {
     const dados = docSnap.data();
-    // Verifica se o campo 'ganhos' existe no Firebase
     if (dados && dados.ganhos !== undefined) {
         saldoAcumulado = parseFloat(dados.ganhos);
         atualizarInterfaceGanhos();
     }
 });
 
-// Função para atualizar o texto e o ícone do olho
+// Função para atualizar o texto e o ícone
 function atualizarInterfaceGanhos() {
-    const elementoTexto = document.getElementById('txt-ganhos'); // Certifique-se que o ID no HTML é este
-    const elementoIcone = document.getElementById('eye-icon');   // Certifique-se que o ID no HTML é este
+    const elementoTexto = document.getElementById('txt-ganhos');
+    const elementoIcone = document.getElementById('eye-icon');
 
     if (mostrarGanhos) {
         elementoTexto.innerText = `R$ ${saldoAcumulado.toLocaleString('pt-BR', {minimumFractionDigits: 2})}`;
@@ -26,7 +25,7 @@ function atualizarInterfaceGanhos() {
     }
 }
 
-// Evento de clique na pílula de ganhos para ocultar/exibir
+// Evento de clique na pílula
 document.getElementById('btn-ganhos').onclick = () => {
     mostrarGanhos = !mostrarGanhos;
     atualizarInterfaceGanhos();
