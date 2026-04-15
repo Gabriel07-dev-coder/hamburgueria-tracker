@@ -3,27 +3,25 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Foody Driver - Fluxo de Entrega</title>
+    <title>Foody Driver</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.css" />
     <style>
         body { margin: 0; font-family: 'Segoe UI', sans-serif; height: 100vh; overflow: hidden; background: #000; }
         #map { position: absolute; top: 0; width: 100%; height: 100%; z-index: 1; }
         
-        /* Pílula de Ganhos Identica à Imagem */
+        /* Pílula de Ganhos estilo 99 */
         .top-ui { position: absolute; top: 20px; width: 100%; display: flex; justify-content: center; z-index: 1000; }
         .ganhos-pill { 
             background: #1c1c1e; color: white; padding: 10px 20px; border-radius: 30px; 
             display: flex; align-items: center; gap: 12px; cursor: pointer; border: 1px solid #333;
         }
-        .separator { border-left: 1px solid #444; height: 20px; margin: 0 5px; }
+        .separator { border-left: 1px solid #444; height: 18px; }
 
-        /* Card de Status */
+        /* Card Inferior */
         .bottom-ui { position: absolute; bottom: 0; width: 100%; z-index: 1000; padding: 20px; box-sizing: border-box; }
         .card { background: white; border-radius: 25px; padding: 20px; box-shadow: 0 -5px 20px rgba(0,0,0,0.2); }
-        
-        .btn-group { display: flex; flex-direction: column; gap: 10px; }
-        .btn { width: 100%; padding: 16px; border-radius: 12px; border: none; font-weight: bold; font-size: 15px; cursor: pointer; transition: 0.2s; }
+        .btn { width: 100%; padding: 16px; border-radius: 12px; border: none; font-weight: bold; font-size: 15px; cursor: pointer; margin-top: 10px; }
         
         .btn-online { background: #2ecc71; color: white; }
         .btn-offline { background: #333; color: white; }
@@ -39,27 +37,24 @@
 
     <div class="top-ui">
         <div class="ganhos-pill" id="btn-ganhos">
-            <span id="eye-icon" style="font-size: 18px;">👁️</span>
+            <span id="eye-icon" style="font-size: 16px;">👁️</span>
             <div class="separator"></div>
-            <span id="txt-ganhos" style="font-weight: bold; font-size: 18px; letter-spacing: 0.5px;">R$ 0,00</span>
-            <span style="font-size: 10px; color: #888; margin-left: 5px;">▲</span>
+            <span id="txt-ganhos" style="font-weight: bold; font-size: 18px;">R$ 0,00</span>
+            <span style="font-size: 10px; color: #888; margin-left: 3px;">▲</span>
         </div>
     </div>
 
     <div class="bottom-ui">
         <div class="card">
-            <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 20px;">
+            <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 15px;">
                 <div style="width: 45px; height: 45px; background: #e8fcf1; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; color: #2ecc71;">JG</div>
                 <div>
                     <strong>João Gabriel</strong><br>
                     <small id="st-label" style="color: #888;">Curitiba, PR | Offline</small>
                 </div>
             </div>
-            
-            <div class="btn-group">
-                <button id="main-action" class="btn btn-online">FICAR ONLINE</button>
-                <button id="stop-action" class="btn btn-offline" style="display: none;">FICAR OFFLINE (PARAR)</button>
-            </div>
+            <button id="main-action" class="btn btn-online">FICAR ONLINE</button>
+            <button id="stop-action" class="btn btn-offline" style="display: none;">FICAR OFFLINE (PARAR)</button>
         </div>
     </div>
 
@@ -67,75 +62,57 @@
     <script src="https://unpkg.com/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.js"></script>
     <script type="module">
         import { db } from './firebase-config.js';
-        import { doc, onSnapshot, setDoc, collection, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+        import { doc, onSnapshot, setDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
 
         const map = L.map('map', { zoomControl: false }).setView([-25.4351, -49.2786], 15);
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
 
-        let statusAtual = "offline"; // offline, online, em_rota
+        let statusAtual = "offline";
         let mostrar = true;
         let saldo = 0;
         let minhaPos = null;
         let markerJG = null;
-        let rota = null;
 
-        // Lógica de Ganhos
+        // Atualiza Ganhos do Firebase
         onSnapshot(doc(db, "entregadores", "entregador_joao"), (docSnap) => {
             const dados = docSnap.data();
             if (dados && dados.ganhos !== undefined) {
                 saldo = parseFloat(dados.ganhos);
-                atualizarTelaGanhos();
+                atualizarInterface();
             }
         });
 
-        function atualizarTelaGanhos() {
+        function atualizarInterface() {
             const txt = document.getElementById('txt-ganhos');
             const eye = document.getElementById('eye-icon');
             txt.innerText = mostrar ? `R$ ${saldo.toFixed(2).replace('.',',')}` : "R$ ••••";
-            eye.innerText = mostrar ? "👁️" : "🙈";
+            eye.innerHTML = mostrar ? "👁️" : "<s>👁️</s>"; // Olho cortado estilo 99
         }
 
-        document.getElementById('btn-ganhos').onclick = () => { mostrar = !mostrar; atualizarTelaGanhos(); };
+        document.getElementById('btn-ganhos').onclick = () => {
+            mostrar = !mostrar;
+            atualizarInterface();
+        };
 
-        // Lógica de GPS e Trajeto
-        function atualizarRota(destino) {
-            if (rota) map.removeControl(rota);
-            if (minhaPos && destino) {
-                rota = L.Routing.control({
-                    waypoints: [minhaPos, L.latLng(destino.lat, destino.lng)],
-                    lineOptions: { styles: [{ color: '#00bcd4', weight: 6 }] },
-                    createMarker: () => null,
-                    show: false
-                }).addTo(map);
-            }
-        }
-
-        // Gerenciador do Botão de Ação
         const btnMain = document.getElementById('main-action');
         const btnStop = document.getElementById('stop-action');
 
         btnMain.onclick = () => {
             if (statusAtual === "offline") {
-                iniciarGps();
                 statusAtual = "online";
                 btnMain.innerText = "INICIAR ENTREGA";
                 btnMain.className = "btn btn-iniciar";
                 btnStop.style.display = "block";
-                document.getElementById('st-label').innerText = "Curitiba, PR | Online | Aguardando";
-            } 
-            else if (statusAtual === "online") {
+                iniciarGps();
+            } else if (statusAtual === "online") {
                 statusAtual = "em_rota";
                 btnMain.innerText = "FINALIZAR ENTREGA";
                 btnMain.className = "btn btn-finalizar";
-                document.getElementById('st-label').innerText = "Curitiba, PR | Em Entrega...";
-                // Aqui você pode buscar o endereço do último pedido no Firebase
-            }
-            else if (statusAtual === "em_rota") {
-                alert("Entrega finalizada com sucesso!");
+            } else {
+                alert("Entrega concluída!");
                 statusAtual = "online";
                 btnMain.innerText = "INICIAR ENTREGA";
                 btnMain.className = "btn btn-iniciar";
-                if (rota) map.removeControl(rota);
             }
         };
 
@@ -150,11 +127,8 @@
                     markerJG.setLatLng(minhaPos);
                 }
                 map.panTo(minhaPos);
-
                 setDoc(doc(db, "entregadores", "entregador_joao"), { 
-                    lat: p.coords.latitude, 
-                    lng: p.coords.longitude, 
-                    status: statusAtual 
+                    lat: p.coords.latitude, lng: p.coords.longitude, status: statusAtual 
                 }, { merge: true });
             }, null, { enableHighAccuracy: true });
         }
