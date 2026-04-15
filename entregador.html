@@ -1,8 +1,8 @@
-// 1. Variáveis de controle
+// Variáveis de controle
 let mostrarGanhos = true;
 let saldoAcumulado = 0;
 
-// 2. Escuta os ganhos no Firebase
+// Escuta os ganhos no Firebase
 onSnapshot(doc(db, "entregadores", "entregador_joao"), (docSnap) => {
     const dados = docSnap.data();
     if (dados && dados.ganhos !== undefined) {
@@ -11,7 +11,7 @@ onSnapshot(doc(db, "entregadores", "entregador_joao"), (docSnap) => {
     }
 });
 
-// 3. Função para atualizar a tela
+// Atualiza a tela do entregador
 function atualizarInterfaceGanhos() {
     const elementoTexto = document.getElementById('txt-ganhos');
     const elementoIcone = document.getElementById('eye-icon');
@@ -27,7 +27,7 @@ function atualizarInterfaceGanhos() {
     }
 }
 
-// 4. Evento do clique no botão de ganhos
+// Clique no botão de ganhos
 document.getElementById('btn-ganhos').onclick = () => {
     mostrarGanhos = !mostrarGanhos;
     atualizarInterfaceGanhos();
