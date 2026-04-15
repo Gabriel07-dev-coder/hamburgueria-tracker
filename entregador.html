@@ -56,20 +56,8 @@
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
 
         let statusAtual = "offline", markerJG = null, routingControl = null, saldo = 0, mostrar = true;
-        const eyeOpen = `<svg viewBox="0 0 24 24"><path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/></svg>`;
-        const eyeClosed = `<svg viewBox="0 0 24 24"><path d="M12 7c2.76 0 5 2.24 5 5 0 .65-.13 1.26-.36 1.82l2.92 2.92c1.51-1.26 2.7-2.89 3.44-4.74-1.73-4.39-6-7.5-11-7.5-1.4 0-2.74.25-3.98.7l2.16 2.16C10.74 7.13 11.35 7 12 7zM2 4.27l2.28 2.28.46.46C3.08 8.3 1.78 10.02 1 12c1.73 4.39 6 7.5 11 7.5 1.55 0 3.03-.3 4.38-.84l.42.42L19.73 22 21 20.73 3.27 3 2 4.27zM7.53 9.8l1.55 1.55c-.05.21-.08.43-.08.65 0 1.66 1.34 3 3 3 .22 0 .44-.03.65-.08l1.55 1.55c-.67.33-1.41.53-2.2.53-2.76 0-5-2.24-5-5 0-.79.2-1.53.53-2.2zm4.31-.78l3.15 3.15.02-.16c0-1.66-1.34-3-3-3l-.17.01z"/></svg>`;
 
-        function atualizarSaldoUI() {
-            document.getElementById('txt-ganhos').innerText = mostrar ? `R$ ${saldo.toFixed(2).replace('.',',')}` : "R$ ••••";
-            document.getElementById('eye-container').innerHTML = mostrar ? eyeOpen : eyeClosed;
-        }
-
-        document.getElementById('btn-ganhos').onclick = () => { mostrar = !mostrar; atualizarSaldoUI(); };
-
-        onSnapshot(doc(db, "entregadores", "entregador_joao"), (ds) => { 
-            if(ds.exists()) { saldo = ds.data().ganhos || 0; atualizarSaldoUI(); } 
-        });
-
+        // Função do GPS e Marcador Azul
         function iniciarGps() {
             navigator.geolocation.watchPosition(p => {
                 const pos = L.latLng(p.coords.latitude, p.coords.longitude);
@@ -81,15 +69,26 @@
             }, null, { enableHighAccuracy: true });
         }
 
+        // FUNÇÃO DA ROTA - VERIFIQUE OS NOMES DOS CAMPOS NO SEU FIREBASE!
         function monitorarRota() {
+            // Verifique se o documento se chama 'pedido_atual' ou se você mudou o nome
             onSnapshot(doc(db, "pedidos", "pedido_atual"), (ds) => {
                 const p = ds.data();
                 if (ds.exists() && p.status === "em_rota" && markerJG) {
+                    console.log("Pedido em rota detectado!"); // Debug no console
+                    
                     if (routingControl) map.removeControl(routingControl);
+                    
+                    // Verifique se os campos no banco são 'destLat' e 'destLng'
                     routingControl = L.Routing.control({
-                        waypoints: [markerJG.getLatLng(), L.latLng(p.destLat, p.destLng)],
+                        waypoints: [
+                            markerJG.getLatLng(), 
+                            L.latLng(p.destLat, p.destLng)
+                        ],
                         lineOptions: { styles: [{ color: '#007aff', weight: 6 }] },
-                        createMarker: () => null, addWaypoints: false, show: false
+                        createMarker: () => null, 
+                        addWaypoints: false, 
+                        show: false
                     }).addTo(map);
                 }
             });
@@ -101,9 +100,19 @@
                 document.getElementById('main-action').innerText = "SAIR DE SERVIÇO";
                 document.getElementById('main-action').style.background = "#ff4757";
                 document.getElementById('st-label').innerText = "Curitiba, PR | Online";
-                iniciarGps(); monitorarRota();
+                iniciarGps(); 
+                monitorarRota(); // Inicia a escuta da rota
             } else { location.reload(); }
         };
+
+        // Lógica de Ganhos
+        onSnapshot(doc(db, "entregadores", "entregador_joao"), (ds) => { 
+            if(ds.exists()) { saldo = ds.data().ganhos || 0; atualizarSaldoUI(); } 
+        });
+        function atualizarSaldoUI() {
+            document.getElementById('txt-ganhos').innerText = mostrar ? `R$ ${saldo.toFixed(2).replace('.',',')}` : "R$ ••••";
+        }
+        document.getElementById('btn-ganhos').onclick = () => { mostrar = !mostrar; atualizarSaldoUI(); };
     </script>
 </body>
 </html>
