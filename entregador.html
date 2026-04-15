@@ -1,34 +1,104 @@
-// 1. Variáveis de controle
-let mostrarGanhos = true;
-let saldoAcumulado = 0;
-
-// 2. Escuta os ganhos no Firebase
-onSnapshot(doc(db, "entregadores", "entregador_joao"), (docSnap) => {
-    const dados = docSnap.data();
-    if (dados && dados.ganhos !== undefined) {
-        saldoAcumulado = parseFloat(dados.ganhos);
-        atualizarInterfaceGanhos();
-    }
-});
-
-// 3. Função para atualizar a tela
-function atualizarInterfaceGanhos() {
-    const elementoTexto = document.getElementById('txt-ganhos');
-    const elementoIcone = document.getElementById('eye-icon');
-
-    if (elementoTexto && elementoIcone) {
-        if (mostrarGanhos) {
-            elementoTexto.innerText = `R$ ${saldoAcumulado.toLocaleString('pt-BR', {minimumFractionDigits: 2})}`;
-            elementoIcone.innerText = "👁️";
-        } else {
-            elementoTexto.innerText = "R$ ••••";
-            elementoIcone.innerText = "🙈";
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Foody Driver</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <style>
+        body { margin: 0; font-family: sans-serif; height: 100vh; overflow: hidden; background: #000; }
+        #map { position: absolute; top: 0; width: 100%; height: 100%; z-index: 1; }
+        
+        /* Pílula de Ganhos - Onde o valor aparece */
+        .top-ui { position: absolute; top: 20px; width: 100%; display: flex; justify-content: center; z-index: 1000; }
+        .ganhos-pill { 
+            background: #1c1c1e; color: white; padding: 12px 25px; border-radius: 30px; 
+            display: flex; align-items: center; gap: 15px; cursor: pointer;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.5); border: 1px solid #333;
         }
-    }
-}
 
-// 4. Evento do clique no botão de ganhos
-document.getElementById('btn-ganhos').onclick = () => {
-    mostrarGanhos = !mostrarGanhos;
-    atualizarInterfaceGanhos();
-};
+        /* Card Inferior */
+        .bottom-ui { position: absolute; bottom: 0; width: 100%; z-index: 1000; padding: 20px; box-sizing: border-box; }
+        .card { background: white; border-radius: 25px; padding: 20px; box-shadow: 0 -5px 20px rgba(0,0,0,0.2); }
+        .btn-status { width: 100%; padding: 18px; border-radius: 12px; border: none; background: #2ecc71; color: white; font-weight: bold; font-size: 16px; }
+        .btn-status.off { background: #333; }
+    </style>
+</head>
+<body>
+
+    <div id="map"></div>
+
+    <div class="top-ui">
+        <div class="ganhos-pill" id="btn-ganhos">
+            <span id="eye-icon">👁️</span>
+            <span style="border-left: 1px solid #444; height: 18px;"></span>
+            <span id="txt-ganhos" style="font-weight: bold; font-size: 18px;">R$ 0,00</span>
+        </div>
+    </div>
+
+    <div class="bottom-ui">
+        <div class="card">
+            <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 15px;">
+                <div style="width: 45px; height: 45px; background: #e8fcf1; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; color: #2ecc71;">JG</div>
+                <div><strong>João Gabriel</strong><br><small>Curitiba, PR | Online</small></div>
+            </div>
+            <button id="toggle" class="btn-status">ESTOU ONLINE</button>
+        </div>
+    </div>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script type="module">
+        import { db } from './firebase-config.js';
+        import { doc, onSnapshot, setDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+
+        const map = L.map('map', { zoomControl: false }).setView([-25.4351, -49.2786], 15);
+        L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png').addTo(map);
+
+        let isOn = false;
+        let mostrar = true;
+        let saldo = 0;
+
+        // ESTE BLOCO RESOLVE O VALOR (organizado em linhas)
+        onSnapshot(doc(db, "entregadores", "entregador_joao"), (docSnap) => {
+            const dados = docSnap.data();
+            if (dados && dados.ganhos !== undefined) {
+                saldo = parseFloat(dados.ganhos);
+                atualizarTela();
+            }
+        });
+
+        function atualizarTela() {
+            const txt = document.getElementById('txt-ganhos');
+            const eye = document.getElementById('eye-icon');
+            if (mostrar) {
+                txt.innerText = `R$ ${saldo.toLocaleString('pt-BR', {minimumFractionDigits: 2})}`;
+                eye.innerText = "👁️";
+            } else {
+                txt.innerText = "R$ ••••";
+                eye.innerText = "🙈";
+            }
+        }
+
+        document.getElementById('btn-ganhos').onclick = () => {
+            mostrar = !mostrar;
+            atualizarTela();
+        };
+
+        // GPS
+        document.getElementById('toggle').onclick = () => {
+            isOn = !isOn;
+            if (isOn) {
+                document.getElementById('toggle').innerText = "FICAR OFFLINE";
+                document.getElementById('toggle').classList.add('off');
+                navigator.geolocation.watchPosition(p => {
+                    setDoc(doc(db, "entregadores", "entregador_joao"), { 
+                        lat: p.coords.latitude, 
+                        lng: p.coords.longitude, 
+                        status: "online" 
+                    }, { merge: true });
+                });
+            } else { location.reload(); }
+        };
+    </script>
+</body>
+</html>
